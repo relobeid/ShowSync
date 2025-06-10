@@ -1,0 +1,68 @@
+# =============================================================================
+# ShowSync Development Environment Configuration (Minimal)
+# =============================================================================
+# Temporarily simplified configuration to get the application running
+# without external dependencies for initial testing.
+# =============================================================================
+
+spring:
+  # Disable database and caching auto-configuration for now
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+server:
+  # Development port
+  port: 8080
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  # Enhanced logging levels for development
+  level:
+    # Root level
+    root: INFO
+    
+    # ShowSync application - DEBUG level for detailed logging
+    com.showsync: DEBUG
+    
+    # Spring framework
+    org.springframework: INFO
+    org.springframework.web: DEBUG
+
+# =============================================================================
+# ACTUATOR CONFIGURATION
+# =============================================================================
+management:
+  # Expose basic actuator endpoints
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  
+  # Health check configuration
+  endpoint:
+    health:
+      # Show basic health details
+      show-details: always
+
+# =============================================================================
+# APPLICATION-SPECIFIC DEVELOPMENT SETTINGS
+# =============================================================================
+showsync:
+  # Development-specific settings
+  development:
+    # Enable test data creation
+    create-test-data: false
+    # Enable mock external APIs
+    mock-external-apis: true
+    # Enhanced error messages
+    detailed-error-messages: true 

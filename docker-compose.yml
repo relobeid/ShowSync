@@ -1,0 +1,299 @@
+# =============================================================================
+# Docker Compose Configuration for ShowSync Development Environment
+# =============================================================================
+# This file sets up the required infrastructure services for local development:
+# - PostgreSQL database for primary data storage
+# - Redis for caching and session storage
+# - pgAdmin for database management (optional)
+# - Redis Insight for Redis management (optional)
+#
+# Usage:
+#   Start services: docker-compose up -d
+#   Stop services: docker-compose down
+#   View logs: docker-compose logs -f [service-name]
+#   Rebuild: docker-compose up -d --build
+# =============================================================================
+
+version: '3.8'
+
+# =============================================================================
+# SERVICES CONFIGURATION
+# =============================================================================
+services:
+  
+  # =============================================================================
+  # PostgreSQL Database Service
+  # =============================================================================
+  postgres:
+    # Use official PostgreSQL 15 image
+    image: postgres:15-alpine
+    
+    # Container name for easy reference
+    container_name: showsync-postgres
+    
+    # Restart policy - always restart unless stopped manually
+    restart: unless-stopped
+    
+    # Environment variables for PostgreSQL configuration
+    environment:
+      # Database name
+      POSTGRES_DB: showsync_dev
+      # Database user
+      POSTGRES_USER: showsync_user
+      # Database password
+      POSTGRES_PASSWORD: showsync_dev_password
+      # Default encoding
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      # Timezone
+      TZ: UTC
+    
+    # Port mapping - expose PostgreSQL on localhost:5432
+    ports:
+      - "5432:5432"
+    
+    # Volume mounts for data persistence
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+      # Custom initialization scripts
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      # PostgreSQL configuration
+      - ./docker/postgres/conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    
+    # Resource limits for development
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Health check to ensure database is ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U showsync_user -d showsync_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # Networks
+    networks:
+      - showsync-network
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  # =============================================================================
+  # Redis Cache Service
+  # =============================================================================
+  redis:
+    # Use official Redis 7 Alpine image
+    image: redis:7-alpine
+    
+    # Container name for easy reference
+    container_name: showsync-redis
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      # Timezone
+      TZ: UTC
+    
+    # Port mapping - expose Redis on localhost:6379
+    ports:
+      - "6379:6379"
+    
+    # Volume mounts
+    volumes:
+      # Persist Redis data
+      - redis_data:/data
+      # Redis configuration
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    
+    # Start Redis with custom configuration
+    command: redis-server /usr/local/etc/redis/redis.conf
+    
+    # Resource limits for development
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    
+    # Networks
+    networks:
+      - showsync-network
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  # =============================================================================
+  # pgAdmin - PostgreSQL Administration Tool (Optional)
+  # =============================================================================
+  pgadmin:
+    # pgAdmin 4 image
+    image: dpage/pgadmin4:latest
+    
+    # Container name
+    container_name: showsync-pgadmin
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      # pgAdmin default email
+      PGADMIN_DEFAULT_EMAIL: admin@showsync.local
+      # pgAdmin default password
+      PGADMIN_DEFAULT_PASSWORD: admin
+      # Disable host checking for development
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'True'
+      PGADMIN_CONFIG_LOGIN_BANNER: '"ShowSync Development Environment"'
+    
+    # Port mapping - expose pgAdmin on localhost:5050
+    ports:
+      - "5050:80"
+    
+    # Volume mounts
+    volumes:
+      # Persist pgAdmin data
+      - pgadmin_data:/var/lib/pgadmin
+      # Pre-configured servers
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    
+    # Depends on PostgreSQL
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    # Networks
+    networks:
+      - showsync-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  # =============================================================================
+  # Redis Insight - Redis Management Tool (Optional)
+  # =============================================================================
+  redis-insight:
+    # Redis Insight image
+    image: redislabs/redisinsight:latest
+    
+    # Container name
+    container_name: showsync-redis-insight
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Port mapping - expose Redis Insight on localhost:8001
+    ports:
+      - "8001:8001"
+    
+    # Volume mounts
+    volumes:
+      # Persist Redis Insight data
+      - redis_insight_data:/db
+    
+    # Depends on Redis
+    depends_on:
+      redis:
+        condition: service_healthy
+    
+    # Networks
+    networks:
+      - showsync-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# =============================================================================
+# VOLUMES CONFIGURATION
+# =============================================================================
+volumes:
+  # PostgreSQL data persistence
+  postgres_data:
+    driver: local
+    name: showsync_postgres_data
+  
+  # Redis data persistence
+  redis_data:
+    driver: local
+    name: showsync_redis_data
+  
+  # pgAdmin data persistence
+  pgadmin_data:
+    driver: local
+    name: showsync_pgadmin_data
+  
+  # Redis Insight data persistence
+  redis_insight_data:
+    driver: local
+    name: showsync_redis_insight_data
+
+# =============================================================================
+# NETWORKS CONFIGURATION
+# =============================================================================
+networks:
+  # Custom network for ShowSync services
+  showsync-network:
+    driver: bridge
+    name: showsync-network
+    
+    # Network configuration
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    
+    # Enable IPv6 (optional)
+    enable_ipv6: false
+    
+    # Network labels
+    labels:
+      com.showsync.description: "ShowSync development network"
+      com.showsync.environment: "development" 

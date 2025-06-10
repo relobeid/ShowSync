@@ -1,0 +1,70 @@
+-------------------------------------------------------------------------------
+Test set: com.showsync.controller.HealthControllerTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 6, Skipped: 0, Time elapsed: 0.982 s <<< FAILURE! -- in com.showsync.controller.HealthControllerTest
+com.showsync.controller.HealthControllerTest.healthChecks_ShouldMeetPerformanceRequirements -- Time elapsed: 0.947 s <<< ERROR!
+java.lang.RuntimeException: Failed to inject mocked DataSource
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.NoSuchFieldException: dataSource
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782)
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:112)
+	... 3 more
+
+com.showsync.controller.HealthControllerTest.detailedHealthCheck_WithUnhealthyDatabase_ShouldReturnDownStatus -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.RuntimeException: Failed to inject mocked DataSource
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.NoSuchFieldException: dataSource
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782)
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:112)
+	... 3 more
+
+com.showsync.controller.HealthControllerTest.jvmInformation_ShouldIncludeValidMemoryMetrics -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.RuntimeException: Failed to inject mocked DataSource
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.NoSuchFieldException: dataSource
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782)
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:112)
+	... 3 more
+
+com.showsync.controller.HealthControllerTest.simpleHealthCheck_ShouldReturnUpStatus -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.RuntimeException: Failed to inject mocked DataSource
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.NoSuchFieldException: dataSource
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782)
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:112)
+	... 3 more
+
+com.showsync.controller.HealthControllerTest.detailedHealthCheck_WithHealthyDatabase_ShouldReturnUpStatus -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.RuntimeException: Failed to inject mocked DataSource
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.NoSuchFieldException: dataSource
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782)
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:112)
+	... 3 more
+
+com.showsync.controller.HealthControllerTest.systemInformation_ShouldIncludeValidMetrics -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.RuntimeException: Failed to inject mocked DataSource
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.NoSuchFieldException: dataSource
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782)
+	at com.showsync.controller.HealthControllerTest.setUp(HealthControllerTest.java:112)
+	... 3 more
+
