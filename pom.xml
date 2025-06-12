@@ -230,6 +230,13 @@
         
         <!-- Redis testing will be added later when needed -->
         
+        <!-- Lombok - Reduces boilerplate code -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
     </dependencies>
     
     <!-- Build Configuration -->
