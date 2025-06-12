@@ -182,25 +182,91 @@ curl -X GET http://localhost:8080/api/user/profile \
 
 **Output:** Complete documentation for the feature
 
-#### Step 4.2: Commit & Push (5 minutes)
+#### Step 4.2: Professional Commit Strategy (5-10 minutes)
+
+**CRITICAL FOR RECRUITER IMPRESSION**: Make frequent, focused commits rather than large dumps
+
+**Commit Frequency Guidelines:**
+- [ ] Commit after each logical unit of work (entity, test file, config change)
+- [ ] Aim for 3-8 commits per task rather than 1 large commit
+- [ ] Each commit should have a single, clear purpose
+- [ ] Commit daily to maintain consistent GitHub activity graph
+
+**Professional Commit Sequence Example:**
+```bash
+# Instead of one large commit, break it down:
+git add src/main/java/com/showsync/entity/User.java
+git commit -m "feat(entities): add User entity with JPA annotations"
+
+git add src/main/java/com/showsync/repository/UserRepository.java  
+git commit -m "feat(repositories): create UserRepository with custom queries"
+
+git add src/test/java/com/showsync/repository/UserRepositoryTest.java
+git commit -m "test(database): add comprehensive UserRepository tests"
+
+git add src/main/resources/db/migration/V2__Add_users_table.sql
+git commit -m "feat(database): add users table migration with constraints"
+
+git add src/main/java/com/showsync/service/UserService.java
+git commit -m "feat(auth): implement UserService with validation logic"
+
+git add src/test/java/com/showsync/service/UserServiceTest.java
+git commit -m "test(auth): add UserService unit tests with mocking"
+
+# Fix any issues found during testing
+git add src/main/java/com/showsync/service/UserService.java
+git commit -m "fix(auth): handle duplicate email validation edge case"
+```
+
+**Commit Message Format (Conventional Commits):**
+```
+<type>(scope): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix  
+- `test`: Adding tests
+- `refactor`: Code refactoring
+- `docs`: Documentation changes
+- `style`: Code formatting
+- `perf`: Performance improvements
+- `chore`: Build/config changes
+
+**Scopes:**
+- `auth`: Authentication system
+- `database`: Database layer
+- `entities`: JPA entities
+- `repositories`: Data repositories
+- `services`: Business logic
+- `controllers`: API endpoints
+- `tests`: Test infrastructure
+- `config`: Configuration
+
+**Why This Impresses Recruiters:**
+✅ **Shows systematic thinking**: Breaking down complex work into logical steps
+✅ **Demonstrates team collaboration skills**: Easy-to-review, focused commits
+✅ **Professional development habits**: Follows industry standards (Conventional Commits)
+✅ **Consistent activity**: Daily commits show dedication and discipline
+✅ **Clear communication**: Well-written commit messages show attention to detail
+✅ **Version control expertise**: Understanding of Git best practices
+
+**GitHub Profile Impact:**
+- **Green squares daily** = Active, consistent developer
+- **Clear commit history** = Professional, maintainable code
+- **Logical progression** = Understands software development lifecycle
+
 **Actions:**
-- [ ] Stage changes: `git add .`
-- [ ] Commit with clear message: `git commit -m "feat: implement user authentication system"`
-- [ ] Push to feature branch: `git push origin feature/task-{number}-{description}`
-- [ ] Create pull request with description and screenshots
+- [ ] Stage and commit each logical unit separately
+- [ ] Use conventional commit format for all messages
+- [ ] Push commits frequently (don't batch them)
+- [ ] Ensure each commit message tells a clear story
 
-**Commit Message Format:**
-```
-feat: brief description of the feature
-
-- Detailed description of what was implemented
-- Any important technical decisions
-- Testing notes
-
-Closes #issue-number
-```
-
-**Output:** Code committed and ready for review
+**Output:** Professional commit history that showcases development skills to recruiters
 
 ### Phase 5: Validation & Deployment
 
