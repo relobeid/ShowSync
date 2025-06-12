@@ -1,9 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-ShowSync Backend,com.showsync.controller,HealthController,0,281,1,9,0,53,1,9,0,5
-ShowSync Backend,com.showsync.service.impl,HealthServiceImpl,18,0,0,0,6,0,3,0,3,0
-ShowSync Backend,com.showsync,ShowSyncApplication,41,3,0,0,11,1,2,1,2,1
-ShowSync Backend,com.showsync.entity,Media.MediaType,0,21,0,0,0,4,0,1,0,1
-ShowSync Backend,com.showsync.entity,UserMediaInteraction,424,3,82,0,10,1,65,1,24,1
-ShowSync Backend,com.showsync.entity,Media,549,50,118,0,9,6,78,14,19,14
-ShowSync Backend,com.showsync.entity,UserMediaInteraction.Status,0,33,0,0,0,6,0,1,0,1
-ShowSync Backend,com.showsync.entity,User,388,39,82,0,7,5,56,10,15,10
