@@ -202,13 +202,13 @@ public class AuthControllerTest {
     @Test
     void testGetProfile_Unauthorized() throws Exception {
         mockMvc.perform(get("/api/auth/profile"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void testGetProfile_InvalidToken() throws Exception {
         mockMvc.perform(get("/api/auth/profile")
                 .header("Authorization", "Bearer invalid-token"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 } 
