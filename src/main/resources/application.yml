@@ -392,6 +392,15 @@ external-apis:
 # =============================================================================
 # APPLICATION-SPECIFIC CONFIGURATION
 # =============================================================================
+app:
+  # JWT Configuration
+  jwt:
+    # Secret key for JWT signing (base64 encoded)
+    # This is a development key - MUST be changed in production
+    secret: c2hvd3N5bmMtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LXB1cnBvc2VzLW9ubHktcGxlYXNlLWNoYW5nZS1pbi1wcm9kdWN0aW9u
+    # Token expiration time (24 hours in milliseconds)
+    expiration: 86400000
+
 showsync:
   # AI and recommendation settings
   ai:

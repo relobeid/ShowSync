@@ -41,6 +41,16 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -52,4 +62,8 @@ public class User {
     // We'll add relationships later as we create other entities
     // @OneToMany(mappedBy = "user")
     // private Set<UserMediaInteraction> mediaInteractions = new HashSet<>();
+
+    public enum Role {
+        USER, ADMIN
+    }
 } 
