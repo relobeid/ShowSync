@@ -138,6 +138,12 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
         
+        <!-- WebFlux starter - Reactive web client for external API calls -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        
         <!-- Logging with Logback -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -247,6 +253,22 @@
             <artifactId>postgresql</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
+        </dependency>
+        
+        <!-- MockWebServer - For testing HTTP clients -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>4.12.0</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Reactor Test - Testing utilities for reactive streams -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+            <version>3.6.1</version>
         </dependency>
         
         <!-- Redis testing will be added later when needed -->

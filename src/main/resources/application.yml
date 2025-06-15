@@ -358,36 +358,42 @@ springdoc:
 # EXTERNAL API CONFIGURATION
 # =============================================================================
 external-apis:
-  # The Movie Database (TMDb) API
+  # The Movie Database (TMDb) API Configuration
   tmdb:
-    base-url: https://api.themoviedb.org/3
-    # API key to be set in environment-specific configuration
-    api-key: ${TMDB_API_KEY:}
-    # Request timeout in milliseconds
-    timeout: 5000
-    # Rate limiting
-    rate-limit:
-      requests-per-second: 40
-  
-  # Open Library API
-  open-library:
-    base-url: https://openlibrary.org
+    # Base URL for TMDb API v3
+    baseUrl: https://api.themoviedb.org/3
+    # API key for TMDb (override in environment-specific configs)
+    apiKey: ${TMDB_API_KEY:your-tmdb-api-key-here}
     # Request timeout in milliseconds
     timeout: 10000
-    # Rate limiting
-    rate-limit:
-      requests-per-second: 100
+    # Cache TTL for API responses in seconds (1 hour default)
+    cacheTtl: 3600
+    # Rate limiting (requests per minute)
+    rateLimit: 40
+    # Image base URL for poster and backdrop images
+    imageBaseUrl: https://image.tmdb.org/t/p/
+    # Default image sizes
+    posterSize: w500
+    backdropSize: w1280
   
-  # Google Books API
-  google-books:
-    base-url: https://www.googleapis.com/books/v1
-    # API key to be set in environment-specific configuration
-    api-key: ${GOOGLE_BOOKS_API_KEY:}
+  # Open Library API Configuration
+  openLibrary:
+    # Base URL for Open Library API
+    baseUrl: https://openlibrary.org
+    # Search API endpoint
+    searchUrl: https://openlibrary.org/search.json
+    # Book details API endpoint  
+    detailsUrl: https://openlibrary.org/api/books
+    # Cover images base URL
+    coversUrl: https://covers.openlibrary.org/b
     # Request timeout in milliseconds
-    timeout: 5000
-    # Rate limiting
-    rate-limit:
-      requests-per-second: 1000
+    timeout: 15000
+    # Cache TTL for API responses in seconds (2 hours default, less frequent updates)
+    cacheTtl: 7200
+    # Rate limiting (requests per minute) - Open Library is more permissive
+    rateLimit: 100
+    # Default cover image size
+    coverSize: M
 
 # =============================================================================
 # APPLICATION-SPECIFIC CONFIGURATION
