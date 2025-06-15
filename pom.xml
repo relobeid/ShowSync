@@ -154,11 +154,11 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- H2 Database - In-memory database for testing -->
+        <!-- H2 Database - In-memory database for development and testing -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
         
         <!-- Database Migration -->

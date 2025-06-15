@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @since 2024-01-01
  */
 @SpringBootApplication
-// @EnableJpaAuditing // TODO: Re-enable when we add JPA entities
+@EnableJpaAuditing
 // @EnableCaching // TODO: Re-enable when Redis is configured
 @EnableAsync
 @EnableScheduling
