@@ -81,6 +81,17 @@ management:
       show-details: always
 
 # =============================================================================
+# EXTERNAL API CONFIGURATION - DEVELOPMENT
+# =============================================================================
+external-apis:
+  # TMDb API Configuration for development
+  tmdb:
+    # API Key for development environment
+    # Set this as an environment variable: TMDB_API_KEY=your-actual-key
+    # For local development, you can also create a .env file (add to .gitignore)
+    apiKey: ${TMDB_API_KEY:your-tmdb-api-key-here}
+
+# =============================================================================
 # APPLICATION-SPECIFIC DEVELOPMENT SETTINGS
 # =============================================================================
 showsync:
