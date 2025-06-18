@@ -318,7 +318,7 @@ springdoc:
   # OpenAPI configuration
   api-docs:
     enabled: true
-    path: /api-docs
+    path: /v3/api-docs
   
   # Swagger UI configuration
   swagger-ui:

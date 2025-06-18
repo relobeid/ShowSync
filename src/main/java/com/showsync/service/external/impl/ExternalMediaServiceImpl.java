@@ -59,7 +59,7 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-movie-search-' + #query + '-page-' + #page",
-               unless = "#result == null || #result.block() == null")
+               unless = "#result == null")
     public Mono<TmdbSearchResponse<TmdbMovieResponse>> searchMovies(String query, int page) {
         log.debug("Searching TMDb movies: query='{}', page={}", query, page);
         
@@ -88,7 +88,7 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-tv-search-' + #query + '-page-' + #page",
-               unless = "#result == null || #result.block() == null")
+               unless = "#result == null")
     public Mono<TmdbSearchResponse<TmdbTvShowResponse>> searchTvShows(String query, int page) {
         log.debug("Searching TMDb TV shows: query='{}', page={}", query, page);
         
@@ -117,7 +117,7 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'openlibrary-search-' + #query + '-limit-' + #limit + '-offset-' + #offset",
-               unless = "#result == null || #result.block() == null")
+               unless = "#result == null")
     public Mono<OpenLibrarySearchResponse> searchBooks(String query, int limit, int offset) {
         log.debug("Searching Open Library books: query='{}', limit={}, offset={}", query, limit, offset);
         
@@ -147,7 +147,7 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-movie-details-' + #movieId",
-               unless = "#result == null || #result.block() == null")
+               unless = "#result == null")
     public Mono<TmdbMovieResponse> getMovieDetails(Long movieId) {
         log.debug("Fetching TMDb movie details: movieId={}", movieId);
         
@@ -172,7 +172,7 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-tv-details-' + #tvShowId",
-               unless = "#result == null || #result.block() == null")
+               unless = "#result == null")
     public Mono<TmdbTvShowResponse> getTvShowDetails(Long tvShowId) {
         log.debug("Fetching TMDb TV show details: tvShowId={}", tvShowId);
         

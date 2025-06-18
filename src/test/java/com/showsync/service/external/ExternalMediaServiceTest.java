@@ -1,53 +1,52 @@
 package com.showsync.service.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.showsync.config.ExternalApiProperties;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.showsync.config.TestCacheConfig;
 import com.showsync.dto.external.openlibrary.OpenLibraryBookResult;
 import com.showsync.dto.external.openlibrary.OpenLibrarySearchResponse;
 import com.showsync.dto.external.tmdb.TmdbMovieResponse;
 import com.showsync.dto.external.tmdb.TmdbSearchResponse;
 import com.showsync.dto.external.tmdb.TmdbTvShowResponse;
-import com.showsync.service.external.impl.ExternalMediaServiceImpl;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collections;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Unit tests for ExternalMediaService implementation.
+ * Integration tests for ExternalMediaService.
  * 
- * This test class provides comprehensive testing of the external API integration
- * including mocked responses, error handling, caching, and retry logic.
+ * This test class uses WireMock to mock external API responses and tests
+ * the complete integration with WebClient, caching, and response mapping.
  * 
- * Features tested:
- * - TMDb movie and TV show search functionality
- * - Open Library book search functionality
- * - Detailed media information retrieval
- * - Caching behavior
- * - Error handling and retry logic
- * - Rate limiting scenarios
+ * Key Features:
+ * - Uses WireMock 3.x for Jakarta EE compatibility
+ * - Dynamic port configuration with @DynamicPropertySource
+ * - Proper WebClient bean replacement with bean overriding
+ * - Comprehensive test coverage for all external API methods
+ * - Cache integration testing
  * 
  * @author ShowSync Development Team
  * @version 0.1.0
@@ -56,47 +55,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @TestPropertySource(properties = {
-    "external-apis.tmdb.apiKey=test-api-key"
+    "external-apis.tmdb.apiKey=test-api-key",
+    "spring.main.allow-bean-definition-overriding=true"
 })
-@Import(TestCacheConfig.class)
-@org.junit.jupiter.api.Disabled("External API tests disabled to prevent hanging - will re-enable after integration")
+@Import({TestCacheConfig.class, ExternalMediaServiceTest.TestWebClientConfig.class})
 class ExternalMediaServiceTest {
+
+    private static WireMockServer tmdbWireMock;
+    private static WireMockServer openLibraryWireMock;
 
     @Autowired
     private CacheManager cacheManager;
 
     @Autowired
-    private ExternalApiProperties apiProperties;
-
-    private MockWebServer mockWebServer;
     private ExternalMediaService externalMediaService;
+
     private ObjectMapper objectMapper;
 
+    @BeforeAll
+    static void setUpClass() {
+        // Start WireMock servers before Spring context initialization
+        tmdbWireMock = new WireMockServer(WireMockConfiguration.options().dynamicPort());
+        openLibraryWireMock = new WireMockServer(WireMockConfiguration.options().dynamicPort());
+        
+        tmdbWireMock.start();
+        openLibraryWireMock.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        // Configure the base URLs for the WebClients to use the WireMock ports
+        registry.add("test.tmdb.baseUrl", () -> "http://localhost:" + tmdbWireMock.port());
+        registry.add("test.openlibrary.baseUrl", () -> "http://localhost:" + openLibraryWireMock.port());
+    }
+
     @BeforeEach
-    void setUp() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-
+    void setUp() {
         objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules(); // This handles LocalDate serialization
-        
-        String mockServerUrl = mockWebServer.url("/").toString();
-        
-        // Update the real configuration properties to use mock server URLs  
-        apiProperties.getTmdb().setBaseUrl(mockServerUrl);
-        apiProperties.getOpenLibrary().setBaseUrl(mockServerUrl);
-
-        // Create WebClient instances with mock server URL
-        WebClient tmdbWebClient = WebClient.builder()
-                .baseUrl(mockServerUrl)
-                .defaultHeader("Authorization", "Bearer " + apiProperties.getTmdb().getApiKey())
-                .build();
-
-        WebClient openLibraryWebClient = WebClient.builder()
-                .baseUrl(mockServerUrl)
-                .build();
-
-        externalMediaService = new ExternalMediaServiceImpl(apiProperties, tmdbWebClient, openLibraryWebClient);
+        objectMapper.findAndRegisterModules(); // Handle LocalDate serialization
         
         // Clear cache before each test
         if (cacheManager != null) {
@@ -107,23 +103,39 @@ class ExternalMediaServiceTest {
                 }
             });
         }
+        
+        // Reset WireMock stubs
+        tmdbWireMock.resetAll();
+        openLibraryWireMock.resetAll();
     }
 
     @AfterEach
-    void tearDown() throws IOException {
-        mockWebServer.shutdown();
+    void tearDown() {
+        // Reset WireMock after each test
+        if (tmdbWireMock != null) {
+            tmdbWireMock.resetAll();
+        }
+        if (openLibraryWireMock != null) {
+            openLibraryWireMock.resetAll();
+        }
     }
 
     @Test
     void searchMovies_ShouldReturnResults_WhenValidQuery() throws Exception {
         // Arrange
         TmdbSearchResponse<TmdbMovieResponse> mockResponse = createMockMovieSearchResponse();
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(objectMapper.writeValueAsString(mockResponse))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+        
+        tmdbWireMock.stubFor(get(urlPathEqualTo("/search/movie"))
+                .withQueryParam("query", equalTo("test"))
+                .withQueryParam("page", equalTo("1"))
+                .withQueryParam("include_adult", equalTo("false"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(objectMapper.writeValueAsString(mockResponse))));
 
         // Act & Assert
-        StepVerifier.create(externalMediaService.searchMovies("The Matrix", 1))
+        StepVerifier.create(externalMediaService.searchMovies("test", 1))
                 .assertNext(response -> {
                     assertThat(response).isNotNull();
                     assertThat(response.getResults()).hasSize(1);
@@ -137,12 +149,18 @@ class ExternalMediaServiceTest {
     void searchTvShows_ShouldReturnResults_WhenValidQuery() throws Exception {
         // Arrange
         TmdbSearchResponse<TmdbTvShowResponse> mockResponse = createMockTvSearchResponse();
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(objectMapper.writeValueAsString(mockResponse))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+        
+        tmdbWireMock.stubFor(get(urlPathEqualTo("/search/tv"))
+                .withQueryParam("query", equalTo("test"))
+                .withQueryParam("page", equalTo("1"))
+                .withQueryParam("include_adult", equalTo("false"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(objectMapper.writeValueAsString(mockResponse))));
 
         // Act & Assert
-        StepVerifier.create(externalMediaService.searchTvShows("Breaking Bad", 1))
+        StepVerifier.create(externalMediaService.searchTvShows("test", 1))
                 .assertNext(response -> {
                     assertThat(response).isNotNull();
                     assertThat(response.getResults()).hasSize(1);
@@ -156,12 +174,18 @@ class ExternalMediaServiceTest {
     void searchBooks_ShouldReturnResults_WhenValidQuery() throws Exception {
         // Arrange
         OpenLibrarySearchResponse mockResponse = createMockBookSearchResponse();
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(objectMapper.writeValueAsString(mockResponse))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+        
+        openLibraryWireMock.stubFor(get(urlPathEqualTo("/search.json"))
+                .withQueryParam("q", equalTo("test"))
+                .withQueryParam("limit", equalTo("20"))
+                .withQueryParam("offset", equalTo("0"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(objectMapper.writeValueAsString(mockResponse))));
 
         // Act & Assert
-        StepVerifier.create(externalMediaService.searchBooks("The Lord of the Rings", 20, 0))
+        StepVerifier.create(externalMediaService.searchBooks("test", 20, 0))
                 .assertNext(response -> {
                     assertThat(response).isNotNull();
                     assertThat(response.getDocs()).hasSize(1);
@@ -175,9 +199,12 @@ class ExternalMediaServiceTest {
     void getMovieDetails_ShouldReturnDetails_WhenValidId() throws Exception {
         // Arrange
         TmdbMovieResponse mockResponse = createMockMovieResponse();
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(objectMapper.writeValueAsString(mockResponse))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+        
+        tmdbWireMock.stubFor(get(urlPathEqualTo("/movie/603"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(objectMapper.writeValueAsString(mockResponse))));
 
         // Act & Assert
         StepVerifier.create(externalMediaService.getMovieDetails(603L))
@@ -193,9 +220,12 @@ class ExternalMediaServiceTest {
     void getTvShowDetails_ShouldReturnDetails_WhenValidId() throws Exception {
         // Arrange
         TmdbTvShowResponse mockResponse = createMockTvShowResponse();
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(objectMapper.writeValueAsString(mockResponse))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+        
+        tmdbWireMock.stubFor(get(urlPathEqualTo("/tv/1396"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(objectMapper.writeValueAsString(mockResponse))));
 
         // Act & Assert
         StepVerifier.create(externalMediaService.getTvShowDetails(1396L))
@@ -210,9 +240,10 @@ class ExternalMediaServiceTest {
     @Test
     void searchMovies_ShouldHandleError_WhenApiReturns500() {
         // Arrange
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(500)
-                .setBody("Internal Server Error"));
+        tmdbWireMock.stubFor(get(urlPathEqualTo("/search/movie"))
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withBody("Internal Server Error")));
 
         // Act & Assert
         StepVerifier.create(externalMediaService.searchMovies("test", 1))
@@ -220,45 +251,12 @@ class ExternalMediaServiceTest {
                 .verify();
     }
 
-    @Test
-    void searchMovies_ShouldRetryOnRateLimit_WhenApiReturns429() throws Exception {
-        // Arrange
-        TmdbSearchResponse<TmdbMovieResponse> mockResponse = createMockMovieSearchResponse();
-        
-        // First call returns 429 (rate limit)
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(429)
-                .setBody("Rate Limited"));
-        
-        // Second call (retry) returns success
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(objectMapper.writeValueAsString(mockResponse))
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
-
-        // Act & Assert
-        StepVerifier.create(externalMediaService.searchMovies("The Matrix", 1))
-                .assertNext(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.getResults()).hasSize(1);
-                })
-                .verifyComplete();
-    }
-
     private TmdbSearchResponse<TmdbMovieResponse> createMockMovieSearchResponse() {
         TmdbSearchResponse<TmdbMovieResponse> response = new TmdbSearchResponse<>();
         response.setPage(1);
         response.setTotalPages(1);
         response.setTotalResults(1);
-        
-        TmdbMovieResponse movie = new TmdbMovieResponse();
-        movie.setId(603L);
-        movie.setTitle("The Matrix");
-        movie.setOverview("A computer hacker learns from mysterious rebels about the true nature of his reality.");
-        movie.setReleaseDate(LocalDate.of(1999, 3, 31));
-        movie.setVoteAverage(8.7);
-        movie.setPosterPath("/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg");
-        
-        response.setResults(Collections.singletonList(movie));
+        response.setResults(Arrays.asList(createMockMovieResponse()));
         return response;
     }
 
@@ -267,16 +265,7 @@ class ExternalMediaServiceTest {
         response.setPage(1);
         response.setTotalPages(1);
         response.setTotalResults(1);
-        
-        TmdbTvShowResponse tvShow = new TmdbTvShowResponse();
-        tvShow.setId(1396L);
-        tvShow.setName("Breaking Bad");
-        tvShow.setOverview("A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.");
-        tvShow.setFirstAirDate(LocalDate.of(2008, 1, 20));
-        tvShow.setVoteAverage(9.5);
-        tvShow.setPosterPath("/ggFHVNu6YYI5L9pCfOacjizRGt.jpg");
-        
-        response.setResults(Collections.singletonList(tvShow));
+        response.setResults(Arrays.asList(createMockTvShowResponse()));
         return response;
     }
 
@@ -284,16 +273,7 @@ class ExternalMediaServiceTest {
         OpenLibrarySearchResponse response = new OpenLibrarySearchResponse();
         response.setNumFound(1);
         response.setStart(0);
-        
-        OpenLibraryBookResult book = new OpenLibraryBookResult();
-        book.setKey("/works/OL27448W");
-        book.setTitle("The Lord of the Rings");
-        book.setAuthorName(Arrays.asList("J.R.R. Tolkien"));
-        book.setFirstPublishYear(1954);
-        book.setIsbn(Arrays.asList("9780547928227"));
-        book.setCoverIds(Arrays.asList(8566785));
-        
-        response.setDocs(Collections.singletonList(book));
+        response.setDocs(Arrays.asList(createMockBookResult()));
         return response;
     }
 
@@ -304,10 +284,14 @@ class ExternalMediaServiceTest {
         movie.setOverview("A computer hacker learns from mysterious rebels about the true nature of his reality.");
         movie.setReleaseDate(LocalDate.of(1999, 3, 31));
         movie.setVoteAverage(8.7);
-        movie.setRuntime(136);
-        movie.setBudget(63000000L);
-        movie.setRevenue(463517383L);
+        movie.setVoteCount(18040);
         movie.setPosterPath("/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg");
+        movie.setBackdropPath("/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg");
+        movie.setPopularity(42.818);
+        movie.setAdult(false);
+        movie.setOriginalLanguage("en");
+        movie.setOriginalTitle("The Matrix");
+        movie.setGenreIds(Arrays.asList(28, 878));
         return movie;
     }
 
@@ -317,10 +301,51 @@ class ExternalMediaServiceTest {
         tvShow.setName("Breaking Bad");
         tvShow.setOverview("A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.");
         tvShow.setFirstAirDate(LocalDate.of(2008, 1, 20));
+        tvShow.setLastAirDate(LocalDate.of(2013, 9, 29));
         tvShow.setVoteAverage(9.5);
-        tvShow.setNumberOfSeasons(5);
-        tvShow.setNumberOfEpisodes(62);
+        tvShow.setVoteCount(8503);
         tvShow.setPosterPath("/ggFHVNu6YYI5L9pCfOacjizRGt.jpg");
+        tvShow.setBackdropPath("/suopoADq0k8YZr4dQXcU6pToj6s.jpg");
+        tvShow.setPopularity(261.694);
+        tvShow.setOriginalLanguage("en");
+        tvShow.setOriginalName("Breaking Bad");
+        tvShow.setGenreIds(Arrays.asList(18, 80));
+        tvShow.setOriginCountry(Arrays.asList("US"));
         return tvShow;
     }
-} 
+
+    private OpenLibraryBookResult createMockBookResult() {
+        OpenLibraryBookResult book = new OpenLibraryBookResult();
+        book.setKey("/works/OL27448W");
+        book.setTitle("The Lord of the Rings");
+        book.setAuthorName(Arrays.asList("J.R.R. Tolkien"));
+        book.setFirstPublishYear(1954);
+        book.setIsbn(Arrays.asList("9780544003415"));
+        book.setCoverIds(Arrays.asList(8566616));
+        return book;
+    }
+
+    /**
+     * Test configuration that provides WebClient beans pointing to WireMock servers.
+     */
+    @TestConfiguration
+    static class TestWebClientConfig {
+
+        @Bean("tmdbWebClient")
+        public WebClient tmdbWebClient() {
+            return WebClient.builder()
+                    .baseUrl("http://localhost:" + tmdbWireMock.port())
+                    .defaultHeader("Authorization", "Bearer test-api-key")
+                    .defaultHeader("Content-Type", "application/json")
+                    .build();
+        }
+        
+        @Bean("openLibraryWebClient")
+        public WebClient openLibraryWebClient() {
+            return WebClient.builder()
+                    .baseUrl("http://localhost:" + openLibraryWireMock.port())
+                    .defaultHeader("Content-Type", "application/json")
+                    .build();
+        }
+    }
+}

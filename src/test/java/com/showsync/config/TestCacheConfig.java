@@ -40,6 +40,7 @@ public class TestCacheConfig {
     @Primary
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager(
+            "external-api-responses",
             "tmdb-movies", 
             "tmdb-tv-shows", 
             "tmdb-movie-details", 
