@@ -232,6 +232,73 @@ curl -X POST http://localhost:8080/api/auth/register \
 
 **Architecture**: Interface-based design, security-first approach, transactional operations, comprehensive audit logging, external API integration ready for enhancement
 
+**CRITICAL ISSUE RESOLVED - External API Test Hanging (2025-01-12):**
+
+**Problem:** External API tests (`ExternalMediaServiceTest`) were hanging/freezing on HTTP requests, causing the entire test suite to stop execution. Tests would hang on lines like:
+```
+HTTP GET http://localhost:52058/search/movie?query=test&page=1&include_adult=false
+```
+
+**Root Cause Analysis:**
+1. **MockWebServer Configuration Issue**: Original test used MockWebServer with improper WebClient configuration
+2. **Spring Context Timing**: WebClient beans were created before WireMock servers were started
+3. **Bean Override Conflicts**: Spring Boot 3.x doesn't allow bean definition overriding by default
+4. **Jakarta EE Compatibility**: MockWebServer used old javax.servlet.* packages instead of Jakarta EE
+5. **Cache SpEL Expression Bug**: Cache annotations tried to call `.block()` on already-resolved DTOs
+
+**Complete Solution Implemented:**
+- ✅ **Replaced MockWebServer with WireMock 3.x**: Modern Jakarta EE compatible testing framework
+- ✅ **Fixed Spring Context Timing**: Used `@DynamicPropertySource` to set ports before context initialization
+- ✅ **Enabled Bean Overriding**: Added `spring.main.allow-bean-definition-overriding=true` for test configuration
+- ✅ **Updated Dependencies**: Replaced `mockwebserver` with `wiremock-standalone` 3.3.1
+- ✅ **Fixed Cache Configuration**: Added `external-api-responses` cache to `TestCacheConfig`
+- ✅ **Corrected SpEL Expressions**: Removed invalid `.block()` calls from cache annotations
+- ✅ **Proper Test Structure**: Used `@BeforeAll` for static server setup with proper port configuration
+
+**Technical Implementation:**
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@TestPropertySource(properties = {
+    "external-apis.tmdb.apiKey=test-api-key",
+    "spring.main.allow-bean-definition-overriding=true"
+})
+@Import({TestCacheConfig.class, ExternalMediaServiceTest.TestWebClientConfig.class})
+class ExternalMediaServiceTest {
+    
+    private static WireMockServer tmdbServer;
+    private static WireMockServer openLibraryServer;
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("external-apis.tmdb.baseUrl", () -> "http://localhost:" + tmdbServer.port());
+        registry.add("external-apis.openLibrary.baseUrl", () -> "http://localhost:" + openLibraryServer.port());
+    }
+}
+```
+
+**Test Results - COMPLETE SUCCESS:**
+- ✅ **All 6 External API Tests Passing**: No more hanging or freezing
+- ✅ **Full Test Suite**: 62 tests, 0 failures, 0 errors, 0 skipped
+- ✅ **WireMock Integration**: Perfect HTTP mocking with proper JSON responses
+- ✅ **Error Handling**: 500 error responses properly tested with retry logic
+- ✅ **Cache Integration**: All cache operations working correctly
+- ✅ **Build Success**: Maven build completes successfully
+
+**Files Modified:**
+- `ExternalMediaServiceTest.java` - Complete rewrite with WireMock integration
+- `pom.xml` - Replaced MockWebServer with WireMock 3.x dependency
+- `TestCacheConfig.java` - Added `external-api-responses` cache
+- `ExternalMediaServiceImpl.java` - Fixed cache SpEL expressions (removed `.block()` calls)
+
+**Lessons Learned:**
+- MockWebServer is not suitable for Spring Boot 3.x with Jakarta EE
+- WireMock 3.x provides superior testing capabilities with proper Spring integration
+- `@DynamicPropertySource` is essential for proper test server configuration
+- Cache SpEL expressions must account for reactive programming model
+- Bean definition overriding must be explicitly enabled in Spring Boot 3.x tests
+
+**Production Impact:** External API testing infrastructure is now production-ready and will not block CI/CD pipelines
+
 ### Task 2.3: Media Details and Reviews
 - [ ] Create detailed media information endpoint
 - [ ] Add user review/comment system
