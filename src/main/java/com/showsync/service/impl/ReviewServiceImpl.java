@@ -242,20 +242,70 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Override
     public MediaDetailsResponse getMediaDetails(Long mediaId, Long currentUserId) {
-        // TODO: Implement in next part
-        throw new UnsupportedOperationException("Not implemented yet");
+        log.info("Getting media details - mediaId: {}, currentUserId: {}", mediaId, currentUserId);
+        
+        validateMediaId(mediaId);
+        
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new IllegalArgumentException("Media not found"));
+        
+        // Get review statistics
+        long reviewCount = reviewRepository.countByMediaIdNotModerated(mediaId);
+        Double averageRating = reviewRepository.getAverageRatingByMediaId(mediaId);
+        
+        // Get user's review if authenticated
+        Optional<Review> userReview = currentUserId != null ? 
+                reviewRepository.findByUserIdAndMediaId(currentUserId, mediaId) : 
+                Optional.empty();
+        
+        // Get recent reviews
+        PageRequest recentReviewsPageable = PageRequest.of(0, 3);
+        Page<Review> recentReviews = reviewRepository.findByMediaIdNotModerated(mediaId, recentReviewsPageable);
+        
+        // Build response
+        MediaDetailsResponse response = new MediaDetailsResponse();
+        response.setId(media.getId());
+        response.setType(media.getType().toString());
+        response.setTitle(media.getTitle());
+        response.setDescription(media.getDescription());
+        response.setPosterUrl(media.getPosterUrl());
+        response.setBackdropUrl(media.getBackdropUrl());
+        response.setReleaseDate(media.getReleaseDate());
+        response.setExternalId(media.getExternalId());
+        response.setExternalSource(media.getExternalSource());
+        
+        // Set statistics
+        MediaDetailsResponse.MediaStatistics stats = new MediaDetailsResponse.MediaStatistics();
+        stats.setTotalReviews(reviewCount);
+        stats.setAverageRating(averageRating != null ? averageRating : 0.0);
+        response.setStatistics(stats);
+        
+        // Set recent reviews
+        List<ReviewResponse> recentReviewResponses = recentReviews.getContent().stream()
+                .map(review -> convertToReviewResponse(review, currentUserId))
+                .collect(java.util.stream.Collectors.toList());
+        response.setRecentReviews(recentReviewResponses);
+        
+        log.info("Media details retrieved - mediaId: {}, reviewCount: {}, avgRating: {}", 
+                mediaId, reviewCount, averageRating);
+        
+        return response;
     }
     
     @Override
     public Page<ReviewResponse> getReviewsForMedia(Long mediaId, Long currentUserId, Pageable pageable) {
-        // TODO: Implement in next part
-        throw new UnsupportedOperationException("Not implemented yet");
+        validateMediaId(mediaId);
+        
+        Page<Review> reviews = reviewRepository.findByMediaIdNotModerated(mediaId, pageable);
+        return reviews.map(review -> convertToReviewResponse(review, currentUserId));
     }
     
     @Override
     public Page<ReviewResponse> getMostHelpfulReviews(Long mediaId, Long currentUserId, Pageable pageable) {
-        // TODO: Implement in next part
-        throw new UnsupportedOperationException("Not implemented yet");
+        validateMediaId(mediaId);
+        
+        Page<Review> reviews = reviewRepository.findMostHelpfulReviews(mediaId, 3, pageable);
+        return reviews.map(review -> convertToReviewResponse(review, currentUserId));
     }
     
     @Override
@@ -290,5 +340,49 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public boolean hasUserReviewedMedia(Long userId, Long mediaId) {
         return reviewRepository.existsByUserIdAndMediaId(userId, mediaId);
+    }
+    
+    /**
+     * Convert Review entity to ReviewResponse DTO.
+     */
+    private ReviewResponse convertToReviewResponse(Review review, Long currentUserId) {
+        ReviewResponse response = new ReviewResponse();
+        response.setId(review.getId());
+        response.setTitle(review.getTitle());
+        response.setContent(review.getContent());
+        response.setRating(review.getRating());
+        response.setSpoiler(review.isSpoiler());
+        response.setHelpfulVotes(review.getHelpfulVotes());
+        response.setTotalVotes(review.getTotalVotes());
+        response.setHelpfulnessRatio(review.getHelpfulnessRatio());
+        response.setCreatedAt(review.getCreatedAt());
+        response.setUpdatedAt(review.getUpdatedAt());
+        
+        // Set user info
+        ReviewResponse.UserInfo userInfo = new ReviewResponse.UserInfo();
+        userInfo.setId(review.getUser().getId());
+        userInfo.setUsername(review.getUser().getUsername());
+        userInfo.setDisplayName(review.getUser().getDisplayName());
+        response.setUser(userInfo);
+        
+        // Set media info
+        ReviewResponse.MediaInfo mediaInfo = new ReviewResponse.MediaInfo();
+        mediaInfo.setId(review.getMedia().getId());
+        mediaInfo.setTitle(review.getMedia().getTitle());
+        mediaInfo.setType(review.getMedia().getType().toString());
+        response.setMedia(mediaInfo);
+        
+        // Check if current user voted on this review
+        if (currentUserId != null) {
+            Optional<ReviewVote> userVoteEntity = reviewVoteRepository.findByUserIdAndReviewId(currentUserId, review.getId());
+            if (userVoteEntity.isPresent()) {
+                ReviewResponse.UserVote userVote = new ReviewResponse.UserVote();
+                userVote.setHelpful(userVoteEntity.get().isHelpful());
+                userVote.setVotedAt(userVoteEntity.get().getCreatedAt());
+                response.setUserVote(userVote);
+            }
+        }
+        
+        return response;
     }
 } 
