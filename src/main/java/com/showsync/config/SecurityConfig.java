@@ -56,6 +56,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/media/**").hasRole("USER")
                 .requestMatchers(HttpMethod.POST, "/api/media/**").hasRole("USER")
                 
+                // Review endpoints - require authentication
+                .requestMatchers("/api/reviews/**").hasRole("USER")
+                
+                // Library endpoints - require authentication  
+                .requestMatchers("/api/library/**").hasRole("USER")
+                
+                // Trending endpoint - public access
+                .requestMatchers(HttpMethod.GET, "/api/trending").permitAll()
+                
                 // Group endpoints - require authentication
                 .requestMatchers("/api/groups/**").hasRole("USER")
                 
