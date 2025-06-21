@@ -306,7 +306,8 @@ class ExternalMediaServiceTest {
 - [x] Create media statistics aggregation
 - [x] Add trending media calculation (basic foundation)
 - **Test**: View media details, post review, vote on reviews, see aggregated ratings
-- **Implementation**: Full review system with comprehensive unit tests (23 tests), integration tests, voting system, and media details aggregation
+- **Implementation**: Full review system with comprehensive unit tests (23 tests passing)
+- **Note**: Integration tests have JWT authentication setup issues - deferred as technical debt
 
 ## Phase 3: Group Foundation (Week 5-6)
 
