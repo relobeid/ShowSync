@@ -54,11 +54,11 @@ public class GroupServiceImpl implements GroupService {
     
     @Override
     public Group createGroup(CreateGroupRequest request, User createdBy) {
-        log.info("Creating new group - name: {}, createdBy: {}", request.getName(), createdBy.getId());
-        
-        // Validate input
+        // Validate input first before accessing properties
         validateCreateGroupRequest(request);
         validateUser(createdBy);
+        
+        log.info("Creating new group - name: {}, createdBy: {}", request.getName(), createdBy.getId());
         
         // Check if group name is already taken
         if (!isGroupNameAvailable(request.getName())) {
@@ -119,7 +119,8 @@ public class GroupServiceImpl implements GroupService {
         }
         if (request.getMaxMembers() != null) {
             // Validate that new max members doesn't violate current member count
-            long currentMemberCount = group.getActiveMemberCount();
+            long currentMemberCount = membershipRepository.countByGroupAndStatus(
+                    group, GroupMembership.MembershipStatus.ACTIVE);
             if (request.getMaxMembers() > 0 && currentMemberCount > request.getMaxMembers()) {
                 throw new IllegalArgumentException(
                     String.format("Cannot set max members to %d when group already has %d members", 
@@ -214,8 +215,8 @@ public class GroupServiceImpl implements GroupService {
             }
         }
         
-        // Check group capacity
-        if (group.isAtCapacity()) {
+        // Check group capacity using repository query instead of lazy-loaded collection
+        if (isGroupAtCapacity(group)) {
             throw new IllegalArgumentException("This group has reached its maximum member capacity");
         }
         
@@ -349,7 +350,7 @@ public class GroupServiceImpl implements GroupService {
         }
         
         // Check group capacity before approving
-        if (membership.getGroup().isAtCapacity()) {
+        if (isGroupAtCapacity(membership.getGroup())) {
             throw new IllegalArgumentException("Cannot approve membership - group has reached maximum capacity");
         }
         
@@ -505,5 +506,20 @@ public class GroupServiceImpl implements GroupService {
         if (currentUser == null) {
             throw new SecurityException("Authentication required to view group members");
         }
+    }
+    
+    /**
+     * Check if a group has reached its maximum capacity using repository query
+     * This is more reliable than using the lazy-loaded collection
+     */
+    private boolean isGroupAtCapacity(Group group) {
+        if (group.getMaxMembers() == null || group.getMaxMembers() <= 0) {
+            return false; // No capacity limit
+        }
+        
+        long activeMemberCount = membershipRepository.countByGroupAndStatus(
+                group, GroupMembership.MembershipStatus.ACTIVE);
+        
+        return activeMemberCount >= group.getMaxMembers();
     }
 } 
