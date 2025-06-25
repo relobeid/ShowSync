@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ShowSync Logo](https://via.placeholder.com/200x80/1a1a1a/ffffff?text=ShowSync)
+![ShowSync Logo](.github/assets/logo.png)
 
 **The AI-powered social platform where Discord meets IMDB**
 
