@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src=".github/assets/logo.png" alt="ShowSync Logo" width="200">
+<img src=".github/assets/logo.png" alt="ShowSync Logo" width="300">
 
 **The AI-powered social platform where Discord meets IMDB**
 
