@@ -43,6 +43,14 @@ import jakarta.validation.constraints.Size;
  * Security:
  * All endpoints require user authentication (ROLE_USER or higher).
  * 
+ * KNOWN ISSUE:
+ * External API integration works perfectly (TMDb returns data successfully),
+ * but reactive Mono response delivery has configuration issue causing 403
+ * responses to reach client despite successful backend processing.
+ * See logs for "Movie search completed successfully" vs client 403 status.
+ * 
+ * TODO: Investigate reactive response delivery in Spring Security context
+ * 
  * @author ShowSync Development Team
  * @version 0.1.0
  * @since 2024-01-01
