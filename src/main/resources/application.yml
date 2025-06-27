@@ -102,6 +102,31 @@ spring:
       - external-api-responses
   
   # =============================================================================
+  # REDIS CONFIGURATION
+  # =============================================================================
+  data:
+    redis:
+      # Redis server host
+      host: localhost
+      # Redis server port
+      port: 6379
+      # Redis database index (0-15)
+      database: 0
+      # Connection timeout
+      timeout: 2000ms
+      # Connection pool settings
+      lettuce:
+        pool:
+          # Maximum number of connections in pool
+          max-active: 10
+          # Maximum number of idle connections
+          max-idle: 8
+          # Minimum number of idle connections
+          min-idle: 2
+          # Maximum wait time for connection from pool
+          max-wait: 2000ms
+  
+  # =============================================================================
   # SECURITY CONFIGURATION
   # =============================================================================
   security:

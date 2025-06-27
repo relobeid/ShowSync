@@ -42,7 +42,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableConfigurationProperties(ExternalApiProperties.class)
-// @EnableCaching // TODO: Re-enable when Redis is configured
+@EnableCaching 
 @EnableAsync
 @EnableScheduling
 @EnableTransactionManagement
