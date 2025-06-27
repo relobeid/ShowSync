@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -67,11 +68,11 @@ public class WebClientConfig {
                 .baseUrl(apiProperties.getTmdb().getBaseUrl())
                 .clientConnector(new ReactorClientHttpConnector(
                         createHttpClient(apiProperties.getTmdb().getTimeout())))
-                .defaultHeader("Authorization", "Bearer " + apiProperties.getTmdb().getApiKey())
                 .defaultHeader("Content-Type", "application/json")
                 .filter(logRequest())
                 .filter(logResponse())
                 .filter(handleErrors())
+                .filter(addApiKeyParameter())
                 .build();
     }
 
@@ -160,6 +161,27 @@ public class WebClientConfig {
                         });
             }
             return Mono.just(clientResponse);
+        });
+    }
+
+    /**
+     * Filter function to add TMDb API key as query parameter.
+     * 
+     * @return ExchangeFilterFunction for adding API key
+     */
+    private ExchangeFilterFunction addApiKeyParameter() {
+        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+            String apiKey = apiProperties.getTmdb().getApiKey();
+            if (apiKey != null && !apiKey.trim().isEmpty()) {
+                String newUrl = clientRequest.url().toString();
+                String separator = newUrl.contains("?") ? "&" : "?";
+                String modifiedUrl = newUrl + separator + "api_key=" + apiKey;
+                
+                return Mono.just(ClientRequest.from(clientRequest)
+                        .url(java.net.URI.create(modifiedUrl))
+                        .build());
+            }
+            return Mono.just(clientRequest);
         });
     }
 } 
