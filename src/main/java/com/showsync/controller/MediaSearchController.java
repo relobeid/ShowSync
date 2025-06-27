@@ -53,7 +53,6 @@ import jakarta.validation.constraints.Size;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Media Search", description = "External media search operations")
-@PreAuthorize("hasRole('USER')")
 public class MediaSearchController {
 
     private final ExternalMediaService externalMediaService;
