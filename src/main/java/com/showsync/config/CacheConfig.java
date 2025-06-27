@@ -2,8 +2,11 @@ package com.showsync.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,9 +55,11 @@ public class CacheConfig {
 
     /**
      * Primary Redis Cache Manager with TTL policies.
+     * Only created when Redis connection is available.
      */
     @Bean
     @Primary
+    @ConditionalOnBean(RedisConnectionFactory.class)
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
         log.info("Configuring Redis Cache Manager with TTL policies");
         
@@ -95,5 +100,22 @@ public class CacheConfig {
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheConfigurations)
                 .build();
+    }
+
+    /**
+     * Fallback in-memory cache manager when Redis is not available.
+     * Provides caching functionality without persistence.
+     */
+    @Bean
+    @ConditionalOnMissingBean(CacheManager.class)
+    public CacheManager fallbackCacheManager() {
+        log.warn("Redis not available - using in-memory cache manager as fallback");
+        return new ConcurrentMapCacheManager(
+                "external-api-responses",
+                "users", 
+                "media", 
+                "groups", 
+                "recommendations"
+        );
     }
 } 
