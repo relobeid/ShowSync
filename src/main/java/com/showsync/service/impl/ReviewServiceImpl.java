@@ -310,26 +310,114 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Override
     public Page<ReviewResponse> getReviewsByUser(Long userId, Long currentUserId, Pageable pageable) {
-        // TODO: Implement in next part
-        throw new UnsupportedOperationException("Not implemented yet");
+        log.info("Getting reviews by user - userId: {}, currentUserId: {}", userId, currentUserId);
+        
+        validateUserId(userId);
+        
+        // Verify user exists
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found");
+        }
+        
+        Page<Review> reviews = reviewRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        
+        log.info("Found {} reviews for user {}", reviews.getTotalElements(), userId);
+        
+        return reviews.map(review -> convertToReviewResponse(review, currentUserId));
     }
     
     @Override
     public ReviewResponse getReviewById(Long reviewId, Long currentUserId) {
-        // TODO: Implement in next part
-        throw new UnsupportedOperationException("Not implemented yet");
+        log.info("Getting review by ID - reviewId: {}, currentUserId: {}", reviewId, currentUserId);
+        
+        if (reviewId == null || reviewId <= 0) {
+            throw new IllegalArgumentException("Invalid review ID");
+        }
+        
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("Review not found"));
+        
+        // Check if review is moderated (shouldn't be shown to public)
+        if (review.isModerated()) {
+            throw new IllegalArgumentException("Review is not available");
+        }
+        
+        log.info("Review retrieved successfully - reviewId: {}, mediaId: {}", reviewId, review.getMedia().getId());
+        
+        return convertToReviewResponse(review, currentUserId);
     }
     
     @Override
     public List<MediaDetailsResponse.MediaStatistics> getTrendingMedia(Pageable pageable) {
-        // TODO: Implement in next part
-        throw new UnsupportedOperationException("Not implemented yet");
+        log.info("Getting trending media - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        
+        // Calculate trending based on last 7 days of activity
+        LocalDateTime since = LocalDateTime.now().minusDays(7);
+        
+        List<Object[]> mediaStats = reviewRepository.getMediaStatistics(since);
+        
+                 // Convert to MediaStatistics and calculate trending score
+        List<MediaDetailsResponse.MediaStatistics> trendingMedia = mediaStats.stream()
+                .map(stats -> {
+                    Long mediaId = (Long) stats[0];
+                    Long reviewCount = (Long) stats[1];
+                    Double averageRating = (Double) stats[2];
+                    Long totalHelpfulVotes = (Long) stats[3] != null ? (Long) stats[3] : 0L;
+                    
+                    // Calculate trending score: reviews + (avg_rating * 2) + (helpful_votes * 0.5)
+                    double trendingScore = reviewCount + (averageRating * 2.0) + (totalHelpfulVotes * 0.5);
+                    
+                    // Verify media exists
+                    if (!mediaRepository.existsById(mediaId)) {
+                        return null;
+                    }
+                    
+                    MediaDetailsResponse.MediaStatistics mediaStatistics = new MediaDetailsResponse.MediaStatistics();
+                    mediaStatistics.setTotalReviews(reviewCount);
+                    mediaStatistics.setAverageRating(averageRating);
+                    mediaStatistics.setTrendingScore(trendingScore);
+                    // Note: MediaStatistics doesn't contain media info (title, type, etc.)
+                    // This is just statistics - media info would be fetched separately by client using media ID
+                    
+                    return mediaStatistics;
+                })
+                .filter(stats -> stats != null)
+                .sorted((a, b) -> Double.compare(b.getTrendingScore(), a.getTrendingScore()))
+                .skip(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .collect(java.util.stream.Collectors.toList());
+        
+        log.info("Found {} trending media items from {} total media with recent activity", 
+                trendingMedia.size(), mediaStats.size());
+        
+        return trendingMedia;
     }
     
     @Override
     public void updateMediaStatistics(Long mediaId) {
-        // TODO: Implement in next part
-        log.debug("Media statistics update placeholder for mediaId: {}", mediaId);
+        log.info("Updating media statistics for mediaId: {}", mediaId);
+        
+        validateMediaId(mediaId);
+        
+        // Verify media exists
+        if (!mediaRepository.existsById(mediaId)) {
+            throw new IllegalArgumentException("Media not found");
+        }
+        
+        // Get current statistics
+        long reviewCount = reviewRepository.countByMediaIdNotModerated(mediaId);
+        Double averageRating = reviewRepository.getAverageRatingByMediaId(mediaId);
+        
+        // Calculate helpful votes ratio
+        List<Review> reviews = reviewRepository.findByMediaIdNotModerated(mediaId, PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        long totalHelpfulVotes = reviews.stream().mapToLong(Review::getHelpfulVotes).sum();
+        long totalVotes = reviews.stream().mapToLong(Review::getTotalVotes).sum();
+        
+        log.info("Media statistics updated - mediaId: {}, reviewCount: {}, avgRating: {}, helpfulVotes: {}/{}",
+                mediaId, reviewCount, averageRating, totalHelpfulVotes, totalVotes);
+        
+        // Note: In a production system, you might want to store these statistics
+        // in a separate table for performance. Currently, they're calculated on-demand.
     }
     
     @Override

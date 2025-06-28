@@ -100,6 +100,12 @@ class ReviewServiceImplTest {
             when(mediaRepository.findById(1L)).thenReturn(Optional.of(testMedia));
             when(reviewRepository.existsByUserIdAndMediaId(1L, 1L)).thenReturn(false);
             when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+            // Mock for updateMediaStatistics
+            when(mediaRepository.existsById(1L)).thenReturn(true);
+            when(reviewRepository.countByMediaIdNotModerated(1L)).thenReturn(1L);
+            when(reviewRepository.getAverageRatingByMediaId(1L)).thenReturn(8.0);
+            when(reviewRepository.findByMediaIdNotModerated(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(testReview)));
 
             // When
             Review result = reviewService.createReview(1L, testRequest);
@@ -177,6 +183,12 @@ class ReviewServiceImplTest {
             // Given
             when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
             when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+            // Mock for updateMediaStatistics
+            when(mediaRepository.existsById(1L)).thenReturn(true);
+            when(reviewRepository.countByMediaIdNotModerated(1L)).thenReturn(1L);
+            when(reviewRepository.getAverageRatingByMediaId(1L)).thenReturn(8.0);
+            when(reviewRepository.findByMediaIdNotModerated(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(testReview)));
 
             CreateReviewRequest updateRequest = new CreateReviewRequest();
             updateRequest.setTitle("Updated title");
@@ -224,6 +236,12 @@ class ReviewServiceImplTest {
         void shouldDeleteReviewSuccessfully() {
             // Given
             when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
+            // Mock for updateMediaStatistics
+            when(mediaRepository.existsById(1L)).thenReturn(true);
+            when(reviewRepository.countByMediaIdNotModerated(1L)).thenReturn(0L);
+            when(reviewRepository.getAverageRatingByMediaId(1L)).thenReturn(null);
+            when(reviewRepository.findByMediaIdNotModerated(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
 
             // When
             assertDoesNotThrow(() -> reviewService.deleteReview(1L, 1L));
@@ -455,6 +473,223 @@ class ReviewServiceImplTest {
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
             assertEquals(testReview.getId(), result.getContent().get(0).getId());
+        }
+    }
+
+    @Nested
+    @DisplayName("Get Reviews by User Tests")
+    class GetReviewsByUserTests {
+
+        @Test
+        @DisplayName("Should get reviews by user successfully")
+        void shouldGetReviewsByUserSuccessfully() {
+            // Given
+            when(userRepository.existsById(1L)).thenReturn(true);
+            when(reviewRepository.findByUserIdOrderByCreatedAtDesc(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(testReview)));
+
+            // When
+            Page<ReviewResponse> result = reviewService.getReviewsByUser(1L, 2L, PageRequest.of(0, 10));
+
+            // Then
+            assertNotNull(result);
+            assertEquals(1, result.getTotalElements());
+            assertEquals(testReview.getId(), result.getContent().get(0).getId());
+            
+            verify(reviewRepository).findByUserIdOrderByCreatedAtDesc(eq(1L), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when user not found")
+        void shouldThrowExceptionWhenUserNotFound() {
+            // Given
+            when(userRepository.existsById(999L)).thenReturn(false);
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewsByUser(999L, 1L, PageRequest.of(0, 10)));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for invalid user ID")
+        void shouldThrowExceptionForInvalidUserId() {
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewsByUser(null, 1L, PageRequest.of(0, 10)));
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewsByUser(-1L, 1L, PageRequest.of(0, 10)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Get Review by ID Tests")  
+    class GetReviewByIdTests {
+
+        @Test
+        @DisplayName("Should get review by ID successfully")
+        void shouldGetReviewByIdSuccessfully() {
+            // Given
+            when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
+
+            // When
+            ReviewResponse result = reviewService.getReviewById(1L, 2L);
+
+            // Then
+            assertNotNull(result);
+            assertEquals(testReview.getId(), result.getId());
+            assertEquals(testReview.getTitle(), result.getTitle());
+            assertEquals(testReview.getContent(), result.getContent());
+            
+            verify(reviewRepository).findById(1L);
+        }
+
+        @Test
+        @DisplayName("Should throw exception when review not found")
+        void shouldThrowExceptionWhenReviewNotFound() {
+            // Given
+            when(reviewRepository.findById(999L)).thenReturn(Optional.empty());
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewById(999L, 1L));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when review is moderated")
+        void shouldThrowExceptionWhenReviewIsModerated() {
+            // Given
+            Review moderatedReview = new Review();
+            moderatedReview.setId(1L);
+            moderatedReview.setModerated(true);
+            when(reviewRepository.findById(1L)).thenReturn(Optional.of(moderatedReview));
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewById(1L, 1L));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for invalid review ID")
+        void shouldThrowExceptionForInvalidReviewId() {
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewById(null, 1L));
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.getReviewById(-1L, 1L));
+        }
+    }
+
+    @Nested
+    @DisplayName("Get Trending Media Tests")
+    class GetTrendingMediaTests {
+
+        @Test
+        @DisplayName("Should get trending media successfully")
+        void shouldGetTrendingMediaSuccessfully() {
+            // Given
+            Object[] mediaStats = new Object[]{1L, 5L, 8.5, 25L}; // mediaId, reviewCount, avgRating, helpfulVotes
+            List<Object[]> statsList = new java.util.ArrayList<>();
+            statsList.add(mediaStats);
+            when(reviewRepository.getMediaStatistics(any(LocalDateTime.class)))
+                .thenReturn(statsList);
+            when(mediaRepository.existsById(1L)).thenReturn(true);
+
+            // When
+            List<MediaDetailsResponse.MediaStatistics> result = 
+                reviewService.getTrendingMedia(PageRequest.of(0, 10));
+
+            // Then
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            
+            MediaDetailsResponse.MediaStatistics stats = result.get(0);
+            assertEquals(5L, stats.getTotalReviews());
+            assertEquals(8.5, stats.getAverageRating());
+            // Expected trending score: 5 + (8.5 * 2) + (25 * 0.5) = 5 + 17 + 12.5 = 34.5
+            assertEquals(34.5, stats.getTrendingScore());
+            
+            verify(reviewRepository).getMediaStatistics(any(LocalDateTime.class));
+        }
+
+        @Test
+        @DisplayName("Should filter out non-existent media")
+        void shouldFilterOutNonExistentMedia() {
+            // Given
+            Object[] mediaStats = new Object[]{999L, 3L, 7.0, 10L}; // Non-existent media
+            List<Object[]> statsList = new java.util.ArrayList<>();
+            statsList.add(mediaStats);
+            when(reviewRepository.getMediaStatistics(any(LocalDateTime.class)))
+                .thenReturn(statsList);
+            when(mediaRepository.existsById(999L)).thenReturn(false);
+
+            // When
+            List<MediaDetailsResponse.MediaStatistics> result = 
+                reviewService.getTrendingMedia(PageRequest.of(0, 10));
+
+            // Then
+            assertNotNull(result);
+            assertEquals(0, result.size());
+        }
+
+        @Test
+        @DisplayName("Should handle empty results")
+        void shouldHandleEmptyResults() {
+            // Given
+            when(reviewRepository.getMediaStatistics(any(LocalDateTime.class)))
+                .thenReturn(List.of());
+
+            // When
+            List<MediaDetailsResponse.MediaStatistics> result = 
+                reviewService.getTrendingMedia(PageRequest.of(0, 10));
+
+            // Then
+            assertNotNull(result);
+            assertEquals(0, result.size());
+        }
+    }
+
+    @Nested
+    @DisplayName("Update Media Statistics Tests")
+    class UpdateMediaStatisticsTests {
+
+        @Test
+        @DisplayName("Should update media statistics successfully")
+        void shouldUpdateMediaStatisticsSuccessfully() {
+            // Given
+            when(mediaRepository.existsById(1L)).thenReturn(true);
+            when(reviewRepository.countByMediaIdNotModerated(1L)).thenReturn(5L);
+            when(reviewRepository.getAverageRatingByMediaId(1L)).thenReturn(8.2);
+            when(reviewRepository.findByMediaIdNotModerated(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(testReview)));
+
+            // When & Then
+            assertDoesNotThrow(() -> reviewService.updateMediaStatistics(1L));
+            
+            verify(mediaRepository).existsById(1L);
+            verify(reviewRepository).countByMediaIdNotModerated(1L);
+            verify(reviewRepository).getAverageRatingByMediaId(1L);
+            verify(reviewRepository).findByMediaIdNotModerated(eq(1L), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when media not found")
+        void shouldThrowExceptionWhenMediaNotFound() {
+            // Given
+            when(mediaRepository.existsById(999L)).thenReturn(false);
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.updateMediaStatistics(999L));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for invalid media ID")
+        void shouldThrowExceptionForInvalidMediaId() {
+            // When & Then
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.updateMediaStatistics(null));
+            assertThrows(IllegalArgumentException.class, 
+                () -> reviewService.updateMediaStatistics(-1L));
         }
     }
 
