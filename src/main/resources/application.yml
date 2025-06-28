@@ -421,6 +421,115 @@ external-apis:
     coverSize: M
 
 # =============================================================================
+# RESILIENCE4J (CIRCUIT BREAKER) CONFIGURATION
+# =============================================================================
+resilience4j:
+  # Circuit Breaker Configuration
+  circuitbreaker:
+    instances:
+      # TMDb API Circuit Breaker
+      tmdb-api:
+        # Ring buffer size for closed state (number of calls to store)
+        ringBufferSizeInClosedState: 10
+        # Ring buffer size for half-open state
+        ringBufferSizeInHalfOpenState: 5
+        # Failure rate threshold (percentage of failures to trigger circuit breaker)
+        failureRateThreshold: 50
+        # Minimum number of calls before calculating failure rate
+        minimumNumberOfCalls: 5
+        # Wait duration in open state before transitioning to half-open
+        waitDurationInOpenState: 30s
+        # Whether to automatically transition from open to half-open
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        # Slow call duration threshold
+        slowCallDurationThreshold: 10s
+        # Slow call rate threshold
+        slowCallRateThreshold: 50
+        # Permitted number of calls in half-open state
+        permittedNumberOfCallsInHalfOpenState: 3
+        # Exception types that should be recorded as failures
+        recordExceptions:
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+        # Exception types that should be ignored
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+      
+      # Open Library API Circuit Breaker
+      openlibrary-api:
+        ringBufferSizeInClosedState: 10
+        ringBufferSizeInHalfOpenState: 5
+        failureRateThreshold: 60
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 45s
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        slowCallDurationThreshold: 15s
+        slowCallRateThreshold: 50
+        permittedNumberOfCallsInHalfOpenState: 3
+        recordExceptions:
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+  
+  # Retry Configuration
+  retry:
+    instances:
+      # TMDb API Retry
+      tmdb-api:
+        # Maximum number of retry attempts
+        maxAttempts: 3
+        # Wait duration between retries
+        waitDuration: 1s
+        # Exponential backoff multiplier
+        exponentialBackoffMultiplier: 2
+        # Maximum wait duration
+        maxWaitDuration: 10s
+        # Exception types that should trigger retry
+        retryExceptions:
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+        # Exception types that should not trigger retry
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
+      
+      # Open Library API Retry
+      openlibrary-api:
+        maxAttempts: 3
+        waitDuration: 2s
+        exponentialBackoffMultiplier: 2
+        maxWaitDuration: 15s
+        retryExceptions:
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
+  
+  # Rate Limiter Configuration
+  ratelimiter:
+    instances:
+      # TMDb API Rate Limiter
+      tmdb-api:
+        # Number of permits per refresh period
+        limitForPeriod: 40
+        # Refresh period duration
+        limitRefreshPeriod: 60s
+        # Timeout duration when waiting for permit
+        timeoutDuration: 5s
+      
+      # Open Library API Rate Limiter
+      openlibrary-api:
+        limitForPeriod: 100
+        limitRefreshPeriod: 60s
+        timeoutDuration: 5s
+
+# =============================================================================
 # APPLICATION-SPECIFIC CONFIGURATION
 # =============================================================================
 app:

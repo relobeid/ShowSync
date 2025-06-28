@@ -6,6 +6,9 @@ import com.showsync.dto.external.tmdb.TmdbMovieResponse;
 import com.showsync.dto.external.tmdb.TmdbSearchResponse;
 import com.showsync.dto.external.tmdb.TmdbTvShowResponse;
 import com.showsync.service.external.ExternalMediaService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import java.time.Duration;
 
@@ -54,12 +56,15 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     private final WebClient openLibraryWebClient;
 
     /**
-     * Search for movies using TMDb API with caching.
+     * Search for movies using TMDb API with caching, circuit breaker, retry, and rate limiting.
      */
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-movie-search-' + #query + '-page-' + #page",
                unless = "#result == null")
+    @CircuitBreaker(name = "tmdb-api", fallbackMethod = "fallbackMovieSearch")
+    @Retry(name = "tmdb-api")
+    @RateLimiter(name = "tmdb-api")
     public Mono<TmdbSearchResponse<TmdbMovieResponse>> searchMovies(String query, int page) {
         log.debug("Searching TMDb movies: query='{}', page={}", query, page);
         
@@ -72,7 +77,6 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
                         .build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<TmdbSearchResponse<TmdbMovieResponse>>() {})
-                .retryWhen(createRetrySpec("TMDb movie search"))
                 .doOnSuccess(response -> {
                     if (response != null) {
                         log.debug("TMDb movie search successful: {} results found", 
@@ -83,12 +87,15 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     }
 
     /**
-     * Search for TV shows using TMDb API with caching.
+     * Search for TV shows using TMDb API with caching, circuit breaker, retry, and rate limiting.
      */
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-tv-search-' + #query + '-page-' + #page",
                unless = "#result == null")
+    @CircuitBreaker(name = "tmdb-api", fallbackMethod = "fallbackTvSearch")
+    @Retry(name = "tmdb-api")
+    @RateLimiter(name = "tmdb-api")
     public Mono<TmdbSearchResponse<TmdbTvShowResponse>> searchTvShows(String query, int page) {
         log.debug("Searching TMDb TV shows: query='{}', page={}", query, page);
         
@@ -101,7 +108,6 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
                         .build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<TmdbSearchResponse<TmdbTvShowResponse>>() {})
-                .retryWhen(createRetrySpec("TMDb TV search"))
                 .doOnSuccess(response -> {
                     if (response != null) {
                         log.debug("TMDb TV search successful: {} results found", 
@@ -112,12 +118,15 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     }
 
     /**
-     * Search for books using Open Library API with caching.
+     * Search for books using Open Library API with caching, circuit breaker, retry, and rate limiting.
      */
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'openlibrary-search-' + #query + '-limit-' + #limit + '-offset-' + #offset",
                unless = "#result == null")
+    @CircuitBreaker(name = "openlibrary-api", fallbackMethod = "fallbackBookSearch")
+    @Retry(name = "openlibrary-api")
+    @RateLimiter(name = "openlibrary-api")
     public Mono<OpenLibrarySearchResponse> searchBooks(String query, int limit, int offset) {
         log.debug("Searching Open Library books: query='{}', limit={}, offset={}", query, limit, offset);
         
@@ -131,7 +140,6 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
                         .build())
                 .retrieve()
                 .bodyToMono(OpenLibrarySearchResponse.class)
-                .retryWhen(createRetrySpec("Open Library search"))
                 .doOnSuccess(response -> {
                     if (response != null) {
                         log.debug("Open Library search successful: {} results found", 
@@ -142,12 +150,15 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     }
 
     /**
-     * Get detailed movie information by TMDb ID with caching.
+     * Get detailed movie information by TMDb ID with caching, circuit breaker, retry, and rate limiting.
      */
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-movie-details-' + #movieId",
                unless = "#result == null")
+    @CircuitBreaker(name = "tmdb-api", fallbackMethod = "fallbackMovieDetails")
+    @Retry(name = "tmdb-api")
+    @RateLimiter(name = "tmdb-api")
     public Mono<TmdbMovieResponse> getMovieDetails(Long movieId) {
         log.debug("Fetching TMDb movie details: movieId={}", movieId);
         
@@ -157,7 +168,6 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
                         .build(movieId))
                 .retrieve()
                 .bodyToMono(TmdbMovieResponse.class)
-                .retryWhen(createRetrySpec("TMDb movie details"))
                 .doOnSuccess(response -> {
                     if (response != null) {
                         log.debug("TMDb movie details successful: title='{}'", response.getTitle());
@@ -167,12 +177,15 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
     }
 
     /**
-     * Get detailed TV show information by TMDb ID with caching.
+     * Get detailed TV show information by TMDb ID with caching, circuit breaker, retry, and rate limiting.
      */
     @Override
     @Cacheable(value = "external-api-responses", 
                key = "'tmdb-tv-details-' + #tvShowId",
                unless = "#result == null")
+    @CircuitBreaker(name = "tmdb-api", fallbackMethod = "fallbackTvDetails")
+    @Retry(name = "tmdb-api")
+    @RateLimiter(name = "tmdb-api")
     public Mono<TmdbTvShowResponse> getTvShowDetails(Long tvShowId) {
         log.debug("Fetching TMDb TV show details: tvShowId={}", tvShowId);
         
@@ -182,7 +195,6 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
                         .build(tvShowId))
                 .retrieve()
                 .bodyToMono(TmdbTvShowResponse.class)
-                .retryWhen(createRetrySpec("TMDb TV details"))
                 .doOnSuccess(response -> {
                     if (response != null) {
                         log.debug("TMDb TV details successful: name='{}'", response.getName());
@@ -191,44 +203,67 @@ public class ExternalMediaServiceImpl implements ExternalMediaService {
                 .doOnError(error -> log.error("TMDb TV details failed for ID: {}", tvShowId, error));
     }
 
+    // ========================================================================================
+    // FALLBACK METHODS FOR CIRCUIT BREAKER
+    // ========================================================================================
+    
     /**
-     * Create retry specification for external API calls.
-     * 
-     * @param operation the operation name for logging
-     * @return Retry specification with exponential backoff
+     * Fallback method for movie search when TMDb API is unavailable.
      */
-    private Retry createRetrySpec(String operation) {
-        return Retry.backoff(3, Duration.ofSeconds(1))
-                .maxBackoff(Duration.ofSeconds(10))
-                .filter(this::isRetryableError)
-                .doBeforeRetry(retrySignal -> 
-                        log.warn("Retrying {} (attempt {}): {}", 
-                                operation, retrySignal.totalRetries() + 1, 
-                                retrySignal.failure().getMessage()))
-                .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                    log.error("Retry exhausted for {}: {}", operation, retrySignal.failure().getMessage());
-                    return retrySignal.failure();
-                });
-    }
-
-    /**
-     * Determine if an error is retryable.
-     * 
-     * @param throwable the error to check
-     * @return true if the error should trigger a retry
-     */
-    private boolean isRetryableError(Throwable throwable) {
-        if (throwable instanceof WebClientResponseException) {
-            WebClientResponseException ex = (WebClientResponseException) throwable;
-            int statusCode = ex.getStatusCode().value();
-            
-            // Retry on server errors and rate limiting
-            return statusCode >= 500 || statusCode == 429;
-        }
+    public Mono<TmdbSearchResponse<TmdbMovieResponse>> fallbackMovieSearch(String query, int page, Exception ex) {
+        log.warn("TMDb movie search fallback triggered for query '{}': {}", query, ex.getMessage());
         
-        // Retry on network errors and timeouts
-        return throwable instanceof java.net.ConnectException ||
-               throwable instanceof java.util.concurrent.TimeoutException ||
-               throwable.getCause() instanceof java.net.SocketTimeoutException;
+        TmdbSearchResponse<TmdbMovieResponse> fallbackResponse = new TmdbSearchResponse<>();
+        fallbackResponse.setPage(page);
+        fallbackResponse.setTotalPages(0);
+        fallbackResponse.setTotalResults(0);
+        fallbackResponse.setResults(java.util.Collections.emptyList());
+        
+        return Mono.just(fallbackResponse);
+    }
+    
+    /**
+     * Fallback method for TV show search when TMDb API is unavailable.
+     */
+    public Mono<TmdbSearchResponse<TmdbTvShowResponse>> fallbackTvSearch(String query, int page, Exception ex) {
+        log.warn("TMDb TV search fallback triggered for query '{}': {}", query, ex.getMessage());
+        
+        TmdbSearchResponse<TmdbTvShowResponse> fallbackResponse = new TmdbSearchResponse<>();
+        fallbackResponse.setPage(page);
+        fallbackResponse.setTotalPages(0);
+        fallbackResponse.setTotalResults(0);
+        fallbackResponse.setResults(java.util.Collections.emptyList());
+        
+        return Mono.just(fallbackResponse);
+    }
+    
+    /**
+     * Fallback method for book search when Open Library API is unavailable.
+     */
+    public Mono<OpenLibrarySearchResponse> fallbackBookSearch(String query, int limit, int offset, Exception ex) {
+        log.warn("Open Library search fallback triggered for query '{}': {}", query, ex.getMessage());
+        
+        OpenLibrarySearchResponse fallbackResponse = new OpenLibrarySearchResponse();
+        fallbackResponse.setNumFound(0);
+        fallbackResponse.setStart(offset);
+        fallbackResponse.setDocs(java.util.Collections.emptyList());
+        
+        return Mono.just(fallbackResponse);
+    }
+    
+    /**
+     * Fallback method for movie details when TMDb API is unavailable.
+     */
+    public Mono<TmdbMovieResponse> fallbackMovieDetails(Long movieId, Exception ex) {
+        log.warn("TMDb movie details fallback triggered for ID {}: {}", movieId, ex.getMessage());
+        return Mono.empty(); // Return empty to indicate not found
+    }
+    
+    /**
+     * Fallback method for TV show details when TMDb API is unavailable.
+     */
+    public Mono<TmdbTvShowResponse> fallbackTvDetails(Long tvShowId, Exception ex) {
+        log.warn("TMDb TV details fallback triggered for ID {}: {}", tvShowId, ex.getMessage());
+        return Mono.empty(); // Return empty to indicate not found
     }
 } 

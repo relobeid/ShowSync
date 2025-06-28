@@ -238,17 +238,23 @@ class ExternalMediaServiceTest {
     }
 
     @Test
-    void searchMovies_ShouldHandleError_WhenApiReturns500() {
+    void searchMovies_ShouldReturnFallbackResponse_WhenApiReturns500() {
         // Arrange
         tmdbWireMock.stubFor(get(urlPathEqualTo("/search/movie"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withBody("Internal Server Error")));
 
-        // Act & Assert
+        // Act & Assert - Circuit breaker should trigger fallback
         StepVerifier.create(externalMediaService.searchMovies("test", 1))
-                .expectError()
-                .verify();
+                .assertNext(response -> {
+                    assertThat(response).isNotNull();
+                    assertThat(response.getPage()).isEqualTo(1);
+                    assertThat(response.getTotalResults()).isEqualTo(0);
+                    assertThat(response.getTotalPages()).isEqualTo(0);
+                    assertThat(response.getResults()).isEmpty();
+                })
+                .verifyComplete();
     }
 
     private TmdbSearchResponse<TmdbMovieResponse> createMockMovieSearchResponse() {
