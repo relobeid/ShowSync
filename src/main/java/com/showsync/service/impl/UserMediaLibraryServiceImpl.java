@@ -9,11 +9,14 @@ import com.showsync.repository.UserMediaInteractionRepository;
 import com.showsync.repository.UserRepository;
 import com.showsync.service.UserMediaLibraryService;
 import com.showsync.service.external.ExternalMediaService;
+import com.showsync.dto.external.tmdb.TmdbMovieResponse;
+import com.showsync.dto.external.tmdb.TmdbTvShowResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -297,20 +300,78 @@ public class UserMediaLibraryServiceImpl implements UserMediaLibraryService {
     }
     
     private Media createMediaFromExternalApi(String externalId, String externalSource) {
-        // This is a placeholder implementation - we'll integrate with ExternalMediaService
-        // For now, create a basic media object
-        Media media = new Media();
-        media.setExternalId(externalId);
-        media.setExternalSource(externalSource);
-        media.setTitle("Unknown Title"); // This will be fetched from external API
-        media.setType(determineMediaType(externalSource));
-        media.setCreatedAt(LocalDateTime.now());
-        media.setUpdatedAt(LocalDateTime.now());
+        log.info("Creating media from external API: externalId={}, source={}", externalId, externalSource);
         
-        // TODO: Implement actual external API integration
-        log.warn("Using placeholder media creation - external API integration pending");
+        try {
+            Media media = new Media();
+            media.setExternalId(externalId);
+            media.setExternalSource(externalSource);
+            media.setCreatedAt(LocalDateTime.now());
+            media.setUpdatedAt(LocalDateTime.now());
+            
+            // Fetch data based on source
+            switch (externalSource.toLowerCase()) {
+                case "tmdb":
+                    // For TMDb, we need to determine if it's a movie or TV show
+                    // First try as movie, then TV show if movie fails
+                    try {
+                        TmdbMovieResponse movieResponse = externalMediaService.getMovieDetails(Long.valueOf(externalId))
+                                .block(Duration.ofSeconds(10));
+                        
+                        if (movieResponse != null) {
+                            populateMediaFromTmdbMovie(media, movieResponse);
+                        } else {
+                            throw new RuntimeException("Movie not found");
+                        }
+                    } catch (Exception e) {
+                        log.debug("Failed to fetch as movie, trying TV show: {}", e.getMessage());
+                        
+                        TmdbTvShowResponse tvResponse = externalMediaService.getTvShowDetails(Long.valueOf(externalId))
+                                .block(Duration.ofSeconds(10));
+                        
+                        if (tvResponse != null) {
+                            populateMediaFromTmdbTvShow(media, tvResponse);
+                        } else {
+                            throw new RuntimeException("Media not found in TMDb");
+                        }
+                    }
+                    break;
+                    
+                case "openlibrary":
+                    // For OpenLibrary, we only have search, no details endpoint
+                    // We'll create a basic entry and let the user add more details
+                    media.setType(Media.MediaType.BOOK);
+                    media.setTitle("Book - " + externalId);
+                    media.setDescription("Book from OpenLibrary (ID: " + externalId + ")");
+                    break;
+                    
+                default:
+                    throw new IllegalArgumentException("Unsupported external source: " + externalSource);
+            }
+            
+            return media;
+            
+        } catch (Exception e) {
+            log.error("Failed to create media from external API: externalId={}, source={}", 
+                    externalId, externalSource, e);
+            throw new RuntimeException("Failed to fetch media from external API: " + e.getMessage(), e);
+        }
+    }
+    
+    private void populateMediaFromTmdbMovie(Media media, TmdbMovieResponse response) {
+        media.setType(Media.MediaType.MOVIE);
+        media.setTitle(response.getTitle());
+        media.setDescription(response.getOverview());
         
-        return media;
+        log.debug("Created movie media: title='{}', tmdbId={}", response.getTitle(), response.getId());
+    }
+    
+    private void populateMediaFromTmdbTvShow(Media media, TmdbTvShowResponse response) {
+        media.setType(Media.MediaType.TV_SHOW);
+        media.setTitle(response.getName());
+        media.setDescription(response.getOverview());
+        
+        log.debug("Created TV show media: title='{}', tmdbId={}", response.getName(), response.getId());
     }
     
     private Media.MediaType determineMediaType(String externalSource) {
