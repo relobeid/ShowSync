@@ -56,15 +56,17 @@ public class ReviewController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody CreateReviewRequest request) {
         
+        if (userPrincipal == null || userPrincipal.getUser() == null) {
+            log.warn("Unauthenticated request to create review for media: {}", request.getMediaId());
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        
         log.info("Creating review - userId: {}, mediaId: {}", 
                 userPrincipal.getUser().getId(), request.getMediaId());
         
         try {
             Review review = reviewService.createReview(userPrincipal.getUser().getId(), request);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Review created successfully");
-            response.put("reviewId", review.getId());
+            ReviewResponse response = mapToReviewResponse(review, userPrincipal.getUser().getId());
             
             return ResponseEntity.status(201).body(response);
             
@@ -77,6 +79,34 @@ public class ReviewController {
         }
     }
     
+    @GetMapping("/reviews/{reviewId}")
+    @Operation(summary = "Get a review by ID", 
+               description = "Get a specific review by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Review retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Review not found")
+    })
+    public ResponseEntity<?> getReview(
+            @Parameter(description = "Review ID") @PathVariable Long reviewId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        
+        log.info("Getting review - reviewId: {}", reviewId);
+        
+        try {
+            Long currentUserId = userPrincipal != null ? userPrincipal.getUser().getId() : null;
+            ReviewResponse response = reviewService.getReviewById(reviewId, currentUserId);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Review not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Unexpected error getting review", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Internal server error"));
+        }
+    }
+
     @PutMapping("/reviews/{reviewId}")
     @Operation(summary = "Update a review", 
                description = "Update an existing review (only by the author)")
@@ -92,21 +122,23 @@ public class ReviewController {
             @Parameter(description = "Review ID") @PathVariable Long reviewId,
             @Valid @RequestBody CreateReviewRequest request) {
         
+        if (userPrincipal == null || userPrincipal.getUser() == null) {
+            log.warn("Unauthenticated request to update review: {}", reviewId);
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        
         log.info("Updating review - userId: {}, reviewId: {}", 
                 userPrincipal.getUser().getId(), reviewId);
         
         try {
             Review review = reviewService.updateReview(userPrincipal.getUser().getId(), reviewId, request);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Review updated successfully");
-            response.put("reviewId", review.getId());
+            ReviewResponse response = mapToReviewResponse(review, userPrincipal.getUser().getId());
             
             return ResponseEntity.ok(response);
             
         } catch (IllegalArgumentException e) {
             log.warn("Failed to update review: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.notFound().build();
         } catch (SecurityException e) {
             log.warn("Security violation updating review: {}", e.getMessage());
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
@@ -120,7 +152,7 @@ public class ReviewController {
     @Operation(summary = "Delete a review", 
                description = "Delete a review (only by the author)")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Review deleted successfully"),
+        @ApiResponse(responseCode = "204", description = "Review deleted successfully"),
         @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "403", description = "Not authorized to delete this review"),
         @ApiResponse(responseCode = "404", description = "Review not found")
@@ -129,17 +161,22 @@ public class ReviewController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "Review ID") @PathVariable Long reviewId) {
         
+        if (userPrincipal == null || userPrincipal.getUser() == null) {
+            log.warn("Unauthenticated request to delete review: {}", reviewId);
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        
         log.info("Deleting review - userId: {}, reviewId: {}", 
                 userPrincipal.getUser().getId(), reviewId);
         
         try {
             reviewService.deleteReview(userPrincipal.getUser().getId(), reviewId);
             
-            return ResponseEntity.ok(Map.of("message", "Review deleted successfully"));
+            return ResponseEntity.noContent().build();
             
         } catch (IllegalArgumentException e) {
             log.warn("Failed to delete review: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.notFound().build();
         } catch (SecurityException e) {
             log.warn("Security violation deleting review: {}", e.getMessage());
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
@@ -162,6 +199,11 @@ public class ReviewController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "Review ID") @PathVariable Long reviewId,
             @Parameter(description = "Whether the vote is helpful") @RequestParam boolean helpful) {
+        
+        if (userPrincipal == null || userPrincipal.getUser() == null) {
+            log.warn("Unauthenticated request to vote on review: {}", reviewId);
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
         
         log.info("Voting on review - userId: {}, reviewId: {}, helpful: {}", 
                 userPrincipal.getUser().getId(), reviewId, helpful);
@@ -198,6 +240,11 @@ public class ReviewController {
     public ResponseEntity<?> removeVoteOnReview(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Parameter(description = "Review ID") @PathVariable Long reviewId) {
+        
+        if (userPrincipal == null || userPrincipal.getUser() == null) {
+            log.warn("Unauthenticated request to remove vote on review: {}", reviewId);
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
         
         log.info("Removing vote on review - userId: {}, reviewId: {}", 
                 userPrincipal.getUser().getId(), reviewId);
@@ -314,5 +361,52 @@ public class ReviewController {
             case "helpful" -> Sort.by(Sort.Direction.DESC, "helpfulVotes");
             default -> Sort.by(Sort.Direction.DESC, "helpfulVotes");
         };
+    }
+    
+    /**
+     * Maps a Review entity to a ReviewResponse DTO.
+     * 
+     * @param review The review entity to map
+     * @param currentUserId The current user's ID (optional, for vote information)
+     * @return Mapped ReviewResponse
+     */
+    private ReviewResponse mapToReviewResponse(Review review, Long currentUserId) {
+        ReviewResponse response = new ReviewResponse();
+        response.setId(review.getId());
+        response.setTitle(review.getTitle());
+        response.setContent(review.getContent());
+        response.setRating(review.getRating());
+        response.setHelpfulVotes(review.getHelpfulVotes());
+        response.setTotalVotes(review.getTotalVotes());
+        response.setHelpfulnessRatio(review.getHelpfulnessRatio());
+        response.setSpoiler(review.isSpoiler());
+        response.setModerated(review.isModerated());
+        response.setCreatedAt(review.getCreatedAt());
+        response.setUpdatedAt(review.getUpdatedAt());
+        
+        // Map user information
+        ReviewResponse.UserInfo userInfo = new ReviewResponse.UserInfo();
+        userInfo.setId(review.getUser().getId());
+        userInfo.setUsername(review.getUser().getUsername());
+        userInfo.setDisplayName(review.getUser().getDisplayName());
+        userInfo.setProfilePictureUrl(review.getUser().getProfilePictureUrl());
+        response.setUser(userInfo);
+        
+        // Map media information
+        ReviewResponse.MediaInfo mediaInfo = new ReviewResponse.MediaInfo();
+        mediaInfo.setId(review.getMedia().getId());
+        mediaInfo.setType(review.getMedia().getType().toString());
+        mediaInfo.setTitle(review.getMedia().getTitle());
+        mediaInfo.setPosterUrl(review.getMedia().getPosterUrl());
+        // Extract year from release date if available
+        if (review.getMedia().getReleaseDate() != null) {
+            mediaInfo.setReleaseYear(review.getMedia().getReleaseDate().getYear());
+        }
+        response.setMedia(mediaInfo);
+        
+        // Note: User vote information is not included in this simple mapping
+        // It would require a separate query to the ReviewVoteRepository
+        
+        return response;
     }
 } 
