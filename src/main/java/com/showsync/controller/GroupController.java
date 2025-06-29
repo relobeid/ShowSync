@@ -52,6 +52,9 @@ public class GroupController {
             @Valid @RequestBody CreateGroupRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             Group group = groupService.createGroup(request, currentUser);
             GroupResponse response = groupMapper.toResponse(group, currentUser);
@@ -93,6 +96,9 @@ public class GroupController {
             @Valid @RequestBody UpdateGroupRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             Group group = groupService.updateGroup(groupId, request, currentUser);
             GroupResponse response = groupMapper.toResponse(group, currentUser);
@@ -114,6 +120,9 @@ public class GroupController {
             @PathVariable Long groupId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             groupService.deleteGroup(groupId, currentUser);
             
@@ -176,6 +185,9 @@ public class GroupController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             Pageable pageable = PageRequest.of(page, Math.min(size, 100));
             
@@ -195,6 +207,9 @@ public class GroupController {
             @PathVariable Long groupId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             GroupMembership membership = groupService.joinGroup(groupId, currentUser);
             GroupMemberResponse response = groupMapper.toMemberResponse(membership);
@@ -216,6 +231,9 @@ public class GroupController {
             @PathVariable Long groupId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             groupService.leaveGroup(groupId, currentUser, currentUser);
             
@@ -239,6 +257,9 @@ public class GroupController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             Pageable pageable = PageRequest.of(page, Math.min(size, 100));
             
@@ -263,6 +284,9 @@ public class GroupController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            if (userPrincipal == null || userPrincipal.getUser() == null) {
+                return createErrorResponse("Authentication required", HttpStatus.UNAUTHORIZED);
+            }
             User currentUser = userPrincipal.getUser();
             Pageable pageable = PageRequest.of(page, Math.min(size, 100));
             
