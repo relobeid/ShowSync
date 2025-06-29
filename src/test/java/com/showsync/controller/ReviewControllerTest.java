@@ -359,7 +359,7 @@ class ReviewControllerTest {
         @Test
         @DisplayName("Should get media details successfully")
         void shouldGetMediaDetailsSuccessfully() throws Exception {
-            mockMvc.perform(get("/api/reviews/media/{mediaId}", testMedia.getId())
+            mockMvc.perform(get("/api/media/{mediaId}", testMedia.getId())
                     .header("Authorization", "Bearer " + authToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(testMedia.getId()))
@@ -374,7 +374,7 @@ class ReviewControllerTest {
         @Test
         @DisplayName("Should return 404 for non-existent media")
         void shouldReturn404ForNonExistentMedia() throws Exception {
-            mockMvc.perform(get("/api/reviews/media/{mediaId}", 99999L)
+            mockMvc.perform(get("/api/media/{mediaId}", 99999L)
                     .header("Authorization", "Bearer " + authToken))
                     .andExpect(status().isNotFound());
         }
@@ -387,7 +387,7 @@ class ReviewControllerTest {
         @Test
         @DisplayName("Should get reviews for media with pagination")
         void shouldGetReviewsForMediaWithPagination() throws Exception {
-            mockMvc.perform(get("/api/reviews/media/{mediaId}/reviews", testMedia.getId())
+            mockMvc.perform(get("/api/media/{mediaId}/reviews", testMedia.getId())
                     .header("Authorization", "Bearer " + authToken)
                     .param("page", "0")
                     .param("size", "10"))
@@ -420,7 +420,7 @@ class ReviewControllerTest {
             testReview.setTotalVotes(1);
             reviewRepository.save(testReview);
 
-            mockMvc.perform(get("/api/reviews/media/{mediaId}/helpful", testMedia.getId())
+            mockMvc.perform(get("/api/media/{mediaId}/helpful", testMedia.getId())
                     .header("Authorization", "Bearer " + authToken)
                     .param("page", "0")
                     .param("size", "5"))
@@ -439,7 +439,7 @@ class ReviewControllerTest {
         @DisplayName("Should require authentication for all endpoints")
         void shouldRequireAuthenticationForAllEndpoints() throws Exception {
             // Test various endpoints without authentication
-            mockMvc.perform(get("/api/reviews/media/{mediaId}", testMedia.getId()))
+            mockMvc.perform(get("/api/media/{mediaId}", testMedia.getId()))
                     .andExpect(status().isUnauthorized());
 
             mockMvc.perform(post("/api/reviews")
@@ -462,7 +462,7 @@ class ReviewControllerTest {
         @Test
         @DisplayName("Should reject invalid JWT tokens")
         void shouldRejectInvalidJwtTokens() throws Exception {
-            mockMvc.perform(get("/api/reviews/media/{mediaId}", testMedia.getId())
+            mockMvc.perform(get("/api/media/{mediaId}", testMedia.getId())
                     .header("Authorization", "Bearer invalid-token"))
                     .andExpect(status().isUnauthorized());
         }
