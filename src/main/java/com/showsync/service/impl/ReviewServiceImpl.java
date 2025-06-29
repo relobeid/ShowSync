@@ -440,6 +440,7 @@ public class ReviewServiceImpl implements ReviewService {
         response.setContent(review.getContent());
         response.setRating(review.getRating());
         response.setSpoiler(review.isSpoiler());
+        response.setModerated(review.isModerated());
         response.setHelpfulVotes(review.getHelpfulVotes());
         response.setTotalVotes(review.getTotalVotes());
         response.setHelpfulnessRatio(review.getHelpfulnessRatio());
@@ -451,6 +452,7 @@ public class ReviewServiceImpl implements ReviewService {
         userInfo.setId(review.getUser().getId());
         userInfo.setUsername(review.getUser().getUsername());
         userInfo.setDisplayName(review.getUser().getDisplayName());
+        userInfo.setProfilePictureUrl(review.getUser().getProfilePictureUrl());
         response.setUser(userInfo);
         
         // Set media info
@@ -458,6 +460,11 @@ public class ReviewServiceImpl implements ReviewService {
         mediaInfo.setId(review.getMedia().getId());
         mediaInfo.setTitle(review.getMedia().getTitle());
         mediaInfo.setType(review.getMedia().getType().toString());
+        mediaInfo.setPosterUrl(review.getMedia().getPosterUrl());
+        // Extract year from release date if available
+        if (review.getMedia().getReleaseDate() != null) {
+            mediaInfo.setReleaseYear(review.getMedia().getReleaseDate().getYear());
+        }
         response.setMedia(mediaInfo);
         
         // Check if current user voted on this review

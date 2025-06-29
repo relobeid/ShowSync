@@ -280,7 +280,7 @@ public class ReviewController {
             @Parameter(description = "Media ID") @PathVariable Long mediaId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         
-        Long currentUserId = userPrincipal != null ? userPrincipal.getUser().getId() : null;
+        Long currentUserId = (userPrincipal != null && userPrincipal.getUser() != null) ? userPrincipal.getUser().getId() : null;
         
         log.info("Getting media details - mediaId: {}, currentUserId: {}", mediaId, currentUserId);
         
@@ -311,7 +311,7 @@ public class ReviewController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort by: created, helpful, rating") @RequestParam(defaultValue = "helpful") String sort) {
         
-        Long currentUserId = userPrincipal != null ? userPrincipal.getUser().getId() : null;
+        Long currentUserId = (userPrincipal != null && userPrincipal.getUser() != null) ? userPrincipal.getUser().getId() : null;
         
         log.info("Getting reviews for media - mediaId: {}, page: {}, size: {}, sort: {}", 
                 mediaId, page, size, sort);
@@ -328,6 +328,42 @@ public class ReviewController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error getting reviews for media", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Internal server error"));
+        }
+    }
+    
+    @GetMapping("/media/{mediaId}/helpful")
+    @Operation(summary = "Get most helpful reviews for media", 
+               description = "Get the most helpful reviews for a specific media item")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Most helpful reviews retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Media not found")
+    })
+    public ResponseEntity<?> getMostHelpfulReviewsForMedia(
+            @Parameter(description = "Media ID") @PathVariable Long mediaId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "5") int size) {
+        
+        Long currentUserId = (userPrincipal != null && userPrincipal.getUser() != null) ? userPrincipal.getUser().getId() : null;
+        
+        log.info("Getting most helpful reviews for media - mediaId: {}, page: {}, size: {}", 
+                mediaId, page, size);
+        
+        try {
+            // Sort by helpful votes descending, then by total votes descending
+            Sort sortBy = Sort.by(Sort.Direction.DESC, "helpfulVotes")
+                             .and(Sort.by(Sort.Direction.DESC, "totalVotes"));
+            Pageable pageable = PageRequest.of(page, size, sortBy);
+            
+            Page<ReviewResponse> reviews = reviewService.getReviewsForMedia(mediaId, currentUserId, pageable);
+            return ResponseEntity.ok(reviews);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to get most helpful reviews for media: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error getting most helpful reviews for media", e);
             return ResponseEntity.internalServerError().body(Map.of("error", "Internal server error"));
         }
     }
