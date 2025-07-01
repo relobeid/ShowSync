@@ -290,6 +290,9 @@ public class ReviewController {
             
         } catch (IllegalArgumentException e) {
             log.warn("Failed to get media details: {}", e.getMessage());
+            if ("Media not found".equals(e.getMessage())) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error getting media details", e);
