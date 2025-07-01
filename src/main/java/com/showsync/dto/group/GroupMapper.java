@@ -3,9 +3,12 @@ package com.showsync.dto.group;
 import com.showsync.entity.Group;
 import com.showsync.entity.GroupMembership;
 import com.showsync.entity.User;
+import com.showsync.repository.GroupMembershipRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -18,6 +21,13 @@ import java.util.stream.Collectors;
  */
 @Component
 public class GroupMapper {
+    
+    private final GroupMembershipRepository membershipRepository;
+    
+    @Autowired
+    public GroupMapper(GroupMembershipRepository membershipRepository) {
+        this.membershipRepository = membershipRepository;
+    }
     
     /**
      * Converts a Group entity to GroupResponse DTO.
@@ -49,12 +59,12 @@ public class GroupMapper {
             response.setCreatedByDisplayName(group.getCreatedBy().getDisplayName());
         }
         
-        // Current user's membership information
+        // Current user's membership information - use repository instead of lazy collection
         if (currentUser != null) {
-            GroupMembership membership = group.getMembershipForUser(currentUser);
-            if (membership != null) {
+            Optional<GroupMembership> membership = membershipRepository.findByUserAndGroup(currentUser, group);
+            if (membership.isPresent()) {
                 response.setUserMember(true);
-                response.setUserRole(membership.getRole().name());
+                response.setUserRole(membership.get().getRole().name());
             } else {
                 response.setUserMember(false);
             }

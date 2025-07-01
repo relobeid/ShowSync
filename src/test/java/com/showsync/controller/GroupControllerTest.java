@@ -10,6 +10,7 @@ import com.showsync.entity.User;
 import com.showsync.repository.GroupMembershipRepository;
 import com.showsync.repository.GroupRepository;
 import com.showsync.repository.UserRepository;
+import com.showsync.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -60,8 +61,13 @@ class GroupControllerTest {
     @Autowired
     private GroupMembershipRepository membershipRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     private User testUser1;
     private User testUser2;
+    private String testUser1Token;
+    private String testUser2Token;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +79,10 @@ class GroupControllerTest {
         // Create test users
         testUser1 = createTestUser("testuser1", "test1@example.com", "Test User 1");
         testUser2 = createTestUser("testuser2", "test2@example.com", "Test User 2");
+        
+        // Generate JWT tokens
+        testUser1Token = jwtUtil.generateToken(testUser1.getUsername(), testUser1.getRole().toString(), testUser1.getId());
+        testUser2Token = jwtUtil.generateToken(testUser2.getUsername(), testUser2.getRole().toString(), testUser2.getId());
     }
 
     private User createTestUser(String username, String email, String displayName) {
@@ -108,7 +118,7 @@ class GroupControllerTest {
             CreateGroupRequest request = createValidGroupRequest();
 
             mockMvc.perform(post("/api/groups")
-                    .with(user("testuser1").roles("USER"))
+                    .header("Authorization", "Bearer " + testUser1Token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -116,7 +126,7 @@ class GroupControllerTest {
                     .andExpect(jsonPath("$.description").value("A test group for testing purposes"))
                     .andExpect(jsonPath("$.privacySetting").value("PUBLIC"))
                     .andExpect(jsonPath("$.maxMembers").value(50))
-                    .andExpect(jsonPath("$.isActive").value(true))
+                    .andExpect(jsonPath("$.active").value(true))
                     .andExpect(jsonPath("$.createdByUsername").value("testuser1"));
         }
 
@@ -139,7 +149,7 @@ class GroupControllerTest {
             request.setPrivacySetting(Group.PrivacySetting.PUBLIC);
 
             mockMvc.perform(post("/api/groups")
-                    .with(user("testuser1").roles("USER"))
+                    .header("Authorization", "Bearer " + testUser1Token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -188,18 +198,18 @@ class GroupControllerTest {
         @DisplayName("Should get group by ID successfully")
         void shouldGetGroupById() throws Exception {
             mockMvc.perform(get("/api/groups/{id}", testGroup.getId())
-                    .with(user("testuser1").roles("USER")))
+                    .header("Authorization", "Bearer " + testUser1Token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(testGroup.getId()))
                     .andExpect(jsonPath("$.name").value("Test Group"))
-                    .andExpect(jsonPath("$.isUserMember").value(true));
+                    .andExpect(jsonPath("$.userMember").value(true));
         }
 
         @Test
         @DisplayName("Should return 404 for non-existent group")
         void shouldReturn404ForNonExistentGroup() throws Exception {
             mockMvc.perform(get("/api/groups/{id}", 99999L)
-                    .with(user("testuser1").roles("USER")))
+                    .header("Authorization", "Bearer " + testUser1Token))
                     .andExpect(status().isNotFound());
         }
 
@@ -210,7 +220,7 @@ class GroupControllerTest {
                     .param("q", "Test")
                     .param("page", "0")
                     .param("size", "10")
-                    .with(user("testuser1").roles("USER")))
+                    .header("Authorization", "Bearer " + testUser1Token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.totalElements").value(1));
@@ -222,7 +232,7 @@ class GroupControllerTest {
             mockMvc.perform(get("/api/groups/public")
                     .param("page", "0")
                     .param("size", "10")
-                    .with(user("testuser1").roles("USER")))
+                    .header("Authorization", "Bearer " + testUser1Token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
@@ -272,8 +282,8 @@ class GroupControllerTest {
         @DisplayName("Should allow joining public group")
         void shouldJoinPublicGroup() throws Exception {
             mockMvc.perform(post("/api/groups/{id}/join", publicGroup.getId())
-                    .with(user("testuser2").roles("USER")))
-                    .andExpect(status().isOk())
+                    .header("Authorization", "Bearer " + testUser2Token))
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.status").value("ACTIVE"));
         }
 
@@ -281,8 +291,8 @@ class GroupControllerTest {
         @DisplayName("Should create pending request for private group")
         void shouldCreatePendingRequestForPrivateGroup() throws Exception {
             mockMvc.perform(post("/api/groups/{id}/join", privateGroup.getId())
-                    .with(user("testuser2").roles("USER")))
-                    .andExpect(status().isOk())
+                    .header("Authorization", "Bearer " + testUser2Token))
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.status").value("PENDING"));
         }
 
@@ -291,12 +301,12 @@ class GroupControllerTest {
         void shouldLeaveGroup() throws Exception {
             // First join the group
             mockMvc.perform(post("/api/groups/{id}/join", publicGroup.getId())
-                    .with(user("testuser2").roles("USER")))
-                    .andExpect(status().isOk());
+                    .header("Authorization", "Bearer " + testUser2Token))
+                    .andExpect(status().isCreated());
 
             // Then leave the group
-            mockMvc.perform(delete("/api/groups/{id}/leave", publicGroup.getId())
-                    .with(user("testuser2").roles("USER")))
+            mockMvc.perform(post("/api/groups/{id}/leave", publicGroup.getId())
+                    .header("Authorization", "Bearer " + testUser2Token))
                     .andExpect(status().isNoContent());
         }
 
@@ -306,7 +316,7 @@ class GroupControllerTest {
             mockMvc.perform(get("/api/groups/{id}/members", publicGroup.getId())
                     .param("page", "0")
                     .param("size", "10")
-                    .with(user("testuser1").roles("USER")))
+                    .header("Authorization", "Bearer " + testUser1Token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.totalElements").value(1));
@@ -359,7 +369,7 @@ class GroupControllerTest {
             request.setDescription("Updated description");
 
             mockMvc.perform(put("/api/groups/{id}", testGroup.getId())
-                    .with(user("testuser1").roles("USER"))
+                    .header("Authorization", "Bearer " + testUser1Token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -374,7 +384,7 @@ class GroupControllerTest {
             request.setName("Updated Group Name");
 
             mockMvc.perform(put("/api/groups/{id}", testGroup.getId())
-                    .with(user("testuser2").roles("USER"))
+                    .header("Authorization", "Bearer " + testUser2Token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
@@ -384,7 +394,7 @@ class GroupControllerTest {
         @DisplayName("Should delete group successfully by owner")
         void shouldDeleteGroupByOwner() throws Exception {
             mockMvc.perform(delete("/api/groups/{id}", testGroup.getId())
-                    .with(user("testuser1").roles("USER")))
+                    .header("Authorization", "Bearer " + testUser1Token))
                     .andExpect(status().isNoContent());
         }
     }
