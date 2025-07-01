@@ -1,5 +1,6 @@
 package com.showsync.service.impl;
 
+import com.showsync.dto.external.tmdb.TmdbMovieResponse;
 import com.showsync.entity.Media;
 import com.showsync.entity.User;
 import com.showsync.entity.UserMediaInteraction;
@@ -110,9 +111,17 @@ class UserMediaLibraryServiceImplTest {
             String externalId = "999";
             String externalSource = "tmdb";
             
+            // Mock external API response
+            TmdbMovieResponse mockMovieResponse = new TmdbMovieResponse();
+            mockMovieResponse.setId(Long.valueOf(externalId));
+            mockMovieResponse.setTitle("Test Movie");
+            mockMovieResponse.setOverview("Test movie description");
+            
             when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
             when(mediaRepository.findByExternalIdAndExternalSource(externalId, externalSource))
                     .thenReturn(Optional.empty());
+            when(externalMediaService.getMovieDetails(Long.valueOf(externalId)))
+                    .thenReturn(reactor.core.publisher.Mono.just(mockMovieResponse));
             when(mediaRepository.save(any(Media.class))).thenReturn(testMedia);
             when(userMediaInteractionRepository.findByUserIdAndMediaId(userId, testMedia.getId()))
                     .thenReturn(Optional.empty());

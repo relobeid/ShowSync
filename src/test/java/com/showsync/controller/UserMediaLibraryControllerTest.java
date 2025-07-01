@@ -122,8 +122,8 @@ class UserMediaLibraryControllerTest {
         }
         
         @Test
-        @DisplayName("Should return 403 when not authenticated")
-        void shouldReturn403WhenNotAuthenticated() throws Exception {
+        @DisplayName("Should return 401 when not authenticated")
+        void shouldReturn401WhenNotAuthenticated() throws Exception {
             // Given
             AddMediaToLibraryRequest request = new AddMediaToLibraryRequest();
             request.setExternalId("550");
@@ -134,7 +134,7 @@ class UserMediaLibraryControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
         
         @Test
@@ -402,7 +402,7 @@ class UserMediaLibraryControllerTest {
             mockMvc.perform(get("/api/library")
                     .header("Authorization", "Bearer invalid-token"))
                     .andDo(print())
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
     
