@@ -215,7 +215,7 @@ CREATE TABLE group_activities (
     group_id BIGINT,
     activity_type VARCHAR(50),
     created_at TIMESTAMP,
-    data JSONB
+    data TEXT -- JSON data stored as TEXT for H2/PostgreSQL compatibility
 ) PARTITION BY RANGE (created_at);
 ```
 
