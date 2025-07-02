@@ -91,7 +91,7 @@ public interface GroupActivityRepository extends JpaRepository<GroupActivity, Lo
      * @return page of member activities
      */
     @Query("SELECT a FROM GroupActivity a WHERE a.group = :group " +
-           "AND (a.activityType LIKE 'MEMBER_%' OR a.targetUser IS NOT NULL) " +
+           "AND (a.activityType IN ('MEMBER_JOINED', 'MEMBER_LEFT', 'MEMBER_PROMOTED', 'MEMBER_DEMOTED') OR a.targetUser IS NOT NULL) " +
            "ORDER BY a.createdAt DESC")
     Page<GroupActivity> findMemberActivities(@Param("group") Group group, Pageable pageable);
 
@@ -112,7 +112,7 @@ public interface GroupActivityRepository extends JpaRepository<GroupActivity, Lo
            "COUNT(a), " +
            "COUNT(DISTINCT a.user), " +
            "SUM(CASE WHEN a.targetMedia IS NOT NULL THEN 1 ELSE 0 END), " +
-           "SUM(CASE WHEN a.activityType LIKE 'MEMBER_%' THEN 1 ELSE 0 END) " +
+           "SUM(CASE WHEN a.activityType IN ('MEMBER_JOINED', 'MEMBER_LEFT', 'MEMBER_PROMOTED', 'MEMBER_DEMOTED') THEN 1 ELSE 0 END) " +
            "FROM GroupActivity a WHERE a.group = :group")
     Object[] getGroupActivityStatistics(@Param("group") Group group);
 

@@ -50,7 +50,7 @@ public class GroupActivity {
     @JoinColumn(name = "target_user_id")
     private User targetUser;
 
-    @Column(name = "activity_data", columnDefinition = "jsonb")
+    @Column(name = "activity_data", columnDefinition = "TEXT")
     private String activityData;
 
     @CreatedDate
