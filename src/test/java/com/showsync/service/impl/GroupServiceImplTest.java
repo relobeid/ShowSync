@@ -1,6 +1,6 @@
 package com.showsync.service.impl;
 
-import com.showsync.config.TestConfig;
+import com.showsync.config.TestAuditingConfig;
 import com.showsync.dto.group.CreateGroupRequest;
 import com.showsync.dto.group.UpdateGroupRequest;
 import com.showsync.entity.Group;
@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 
@@ -34,8 +35,9 @@ import static org.assertj.core.api.Assertions.*;
  * @since 2024-12-16
  */
 @DataJpaTest
-@Import({TestConfig.class, GroupServiceImpl.class})
+@Import({TestAuditingConfig.class, GroupServiceImpl.class})
 @ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:test-common.properties")
 class GroupServiceImplTest {
 
     @Autowired

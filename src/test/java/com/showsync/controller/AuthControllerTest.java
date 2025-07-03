@@ -1,7 +1,7 @@
 package com.showsync.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.showsync.config.TestConfig;
+import com.showsync.config.TestConfigurationBase;
 import com.showsync.dto.AuthRequest;
 import com.showsync.dto.RegisterRequest;
 import com.showsync.entity.User;
@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -28,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@Import(TestConfig.class)
+@Import(TestConfigurationBase.class)
+@TestPropertySource(locations = "classpath:test-common.properties")
 public class AuthControllerTest {
 
     @Autowired

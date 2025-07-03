@@ -1,7 +1,7 @@
 package com.showsync.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.showsync.config.TestSecurityConfig;
+import com.showsync.config.TestConfigurationBase;
 import com.showsync.dto.review.CreateReviewRequest;
 import com.showsync.entity.*;
 import com.showsync.repository.*;
@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
+@Import(TestConfigurationBase.class)
+@TestPropertySource(locations = "classpath:test-common.properties")
 @Transactional
 @DisplayName("ReviewController Integration Tests")
 class ReviewControllerTest {
