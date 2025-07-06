@@ -101,6 +101,69 @@ Get AI-curated recommendations from your taste-matched community. Discuss theori
 - **Docker & Docker Compose**
 - **Node.js 18+** (for frontend)
 
+### API Keys Setup
+
+ShowSync integrates with external APIs to provide rich media data. Follow these steps to configure your API keys:
+
+#### 1. TMDb API Key (Required)
+The Movie Database (TMDb) provides movie and TV show information.
+
+**Steps to get your TMDb API key:**
+1. Create a free account at [TMDb](https://www.themoviedb.org/)
+2. Go to your account settings: **Settings → API**
+3. Request an API key (choose "Developer" option)
+4. Fill out the form with your application details:
+   - **Application Name**: ShowSync (or your project name)
+   - **Application URL**: http://localhost:8080 (for development)
+   - **Application Summary**: Personal media library and social platform
+5. Copy your API key once approved
+
+#### 2. Environment Configuration
+
+**Create your environment file:**
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit the file with your actual API keys
+nano .env
+```
+
+**Required environment variables:**
+```bash
+# TMDb API Configuration
+TMDB_API_KEY=your-actual-tmdb-api-key-here
+
+# Database Configuration (Production)
+DATABASE_URL=postgresql://username:password@localhost:5432/showsync
+
+# Security Configuration
+JWT_SECRET=your-secure-jwt-secret-key-here
+```
+
+> **⚠️ Important**: Never commit your `.env` file to version control. It contains sensitive information.
+
+#### 3. Verify API Configuration
+
+After setting up your environment variables, verify everything is working:
+
+```bash
+# Start the application
+./mvnw spring-boot:run
+
+# Test external API health
+curl http://localhost:8080/api/health/detailed
+
+# Test movie search (requires authentication)
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     "http://localhost:8080/api/media/search/movies?query=matrix"
+```
+
+You should see:
+- ✅ **TMDb API**: UP
+- ✅ **Open Library API**: UP
+- ✅ **Database**: UP
+
 ### Backend Setup
 ```bash
 # Clone and navigate
@@ -131,9 +194,29 @@ npm run dev
 # Check backend health
 curl http://localhost:8080/api/health
 
+# Check external API health
+curl http://localhost:8080/api/health/detailed
+
 # Check API documentation
 open http://localhost:8080/swagger-ui.html
 ```
+
+### Troubleshooting
+
+**Common Issues and Solutions:**
+
+| Issue | Solution |
+|-------|----------|
+| **TMDb API: DOWN** | 1. Verify your API key in `.env` file<br>2. Check if API key is active on TMDb<br>3. Ensure no extra spaces in `.env` file |
+| **Database connection failed** | 1. Start PostgreSQL: `docker-compose up -d postgres`<br>2. Check database credentials in `.env` |
+| **404 on API endpoints** | 1. Ensure application started successfully<br>2. Check logs for startup errors<br>3. Verify correct port (8080) |
+| **Authentication required** | 1. Register a user via `/api/auth/register`<br>2. Login to get JWT token<br>3. Include token in Authorization header |
+| **External API timeout** | 1. Check internet connection<br>2. Verify API service status<br>3. Review rate limiting policies |
+
+**Getting Help:**
+- Check application logs for detailed error messages
+- Review the [API documentation](http://localhost:8080/swagger-ui.html)
+- Verify your `.env` file against `.env.example`
 
 ## API Documentation
 
