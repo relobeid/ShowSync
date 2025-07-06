@@ -1,6 +1,7 @@
 package com.showsync;
 
 import com.showsync.config.ExternalApiProperties;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -71,22 +72,19 @@ public class ShowSyncApplication {
      *             --logging.level.com.showsync=DEBUG
      */
     public static void main(String[] args) {
-        // Configure system properties before starting the application
-        configureSystemProperties();
+        // Load .env file if it exists
+        Dotenv dotenv = Dotenv.configure()
+                .directory(".")
+                .filename(".env")
+                .ignoreIfMissing()
+                .load();
         
-        // Start the Spring Boot application
-        SpringApplication application = new SpringApplication(ShowSyncApplication.class);
+        // Set environment variables from .env file
+        dotenv.entries().forEach(entry -> {
+            System.setProperty(entry.getKey(), entry.getValue());
+        });
         
-        // Add custom application listeners if needed
-        // application.addListeners(new CustomApplicationListener());
-        
-        // Set default properties that can be overridden by application.properties
-        // Properties defaultProperties = new Properties();
-        // defaultProperties.setProperty("server.port", "8080");
-        // application.setDefaultProperties(defaultProperties);
-        
-        // Start the application
-        application.run(args);
+        SpringApplication.run(ShowSyncApplication.class, args);
     }
     
     /**

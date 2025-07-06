@@ -220,6 +220,13 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         
+        <!-- Dotenv - Load .env file automatically -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        
         <!-- Development Tools -->
         
         <!-- Spring Boot DevTools - Hot reload, auto-restart during development -->
