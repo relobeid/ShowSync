@@ -99,13 +99,40 @@ public class HealthController {
     @GetMapping("/detailed")
     public ResponseEntity<Map<String, Object>> detailedHealthCheck() {
         Map<String, Object> response = new HashMap<>();
-        boolean isHealthy = healthService.checkHealth() && healthService.checkDatabaseHealth();
-        response.put("status", isHealthy ? "UP" : "DOWN");
+        
+        // Overall health check
+        boolean isDatabaseHealthy = healthService.checkDatabaseHealth();
+        boolean isExternalApiHealthy = healthService.checkExternalApiHealth();
+        boolean isOverallHealthy = healthService.checkHealth() && isDatabaseHealthy;
+        
+        response.put("status", isOverallHealthy ? "UP" : "DOWN");
 
+        // Component health details
         Map<String, Object> components = new HashMap<>();
+        
+        // Database health
         Map<String, Object> db = new HashMap<>();
-        db.put("status", healthService.checkDatabaseHealth() ? "UP" : "DOWN");
+        db.put("status", isDatabaseHealthy ? "UP" : "DOWN");
         components.put("db", db);
+        
+        // External APIs health
+        Map<String, Object> externalApis = new HashMap<>();
+        externalApis.put("status", isExternalApiHealthy ? "UP" : "DOWN");
+        
+        // Individual API health
+        Map<String, Object> tmdbApi = new HashMap<>();
+        boolean isTmdbHealthy = healthService.checkTmdbApiHealth();
+        tmdbApi.put("status", isTmdbHealthy ? "UP" : "DOWN");
+        tmdbApi.put("description", "The Movie Database API");
+        externalApis.put("tmdb", tmdbApi);
+        
+        Map<String, Object> openLibraryApi = new HashMap<>();
+        boolean isOpenLibraryHealthy = healthService.checkOpenLibraryApiHealth();
+        openLibraryApi.put("status", isOpenLibraryHealthy ? "UP" : "DOWN");
+        openLibraryApi.put("description", "Open Library API");
+        externalApis.put("openLibrary", openLibraryApi);
+        
+        components.put("externalApis", externalApis);
         response.put("components", components);
 
         return ResponseEntity.ok(response);
