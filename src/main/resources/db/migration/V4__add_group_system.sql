@@ -27,7 +27,8 @@ CREATE TABLE group_memberships (
 -- Create indexes for performance
 CREATE INDEX idx_groups_created_by ON groups(created_by);
 CREATE INDEX idx_groups_privacy_active ON groups(privacy_setting, is_active);
-CREATE INDEX idx_groups_name_active ON groups(name, is_active) WHERE is_active = true;
+-- H2-compatible index (no WHERE clause)
+CREATE INDEX idx_groups_name_active ON groups(name, is_active);
 
 CREATE INDEX idx_group_memberships_group ON group_memberships(group_id);
 CREATE INDEX idx_group_memberships_user ON group_memberships(user_id);

@@ -5,12 +5,19 @@
 # =============================================================================
 
 spring:
-  # Database configuration
+  # Database configuration - H2 for quick development
+  # To use PostgreSQL instead, uncomment the PostgreSQL section and comment out H2
   datasource:
     url: jdbc:h2:mem:showsync;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
     username: sa
     password: password
+    
+    # PostgreSQL option for development (requires Docker services running)
+    # url: jdbc:postgresql://localhost:5432/showsync_dev
+    # driverClassName: org.postgresql.Driver
+    # username: showsync_user
+    # password: showsync_dev_password
   
   # H2 Console for development
   h2:
@@ -21,7 +28,7 @@ spring:
   # JPA configuration for development
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -37,9 +44,11 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
   
-  # Disable Flyway for now (using JPA schema generation)
+  # Enable Flyway for development (use proper database migrations)
   flyway:
-    enabled: false
+    enabled: true
+    # Clean database on startup in development for fresh schema
+    clean-disabled: false
 
 # =============================================================================
 # SERVER CONFIGURATION

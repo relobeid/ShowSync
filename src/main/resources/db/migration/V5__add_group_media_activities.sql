@@ -32,7 +32,7 @@ CREATE TABLE group_activities (
     activity_type VARCHAR(50) NOT NULL, -- MEDIA_ADDED, MEDIA_RATED, MEDIA_COMPLETED, VOTE_CAST, MEMBER_JOINED, etc.
     target_media_id BIGINT REFERENCES media(id),
     target_user_id BIGINT REFERENCES users(id),
-    activity_data JSONB, -- Flexible data storage for activity-specific information
+    activity_data TEXT, -- Flexible JSON data storage (H2/PostgreSQL compatible)
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -52,5 +52,6 @@ CREATE INDEX idx_group_activities_group_id ON group_activities(group_id);
 CREATE INDEX idx_group_activities_user_id ON group_activities(user_id);
 CREATE INDEX idx_group_activities_type ON group_activities(activity_type);
 CREATE INDEX idx_group_activities_created_at ON group_activities(group_id, created_at DESC);
-CREATE INDEX idx_group_activities_target_media ON group_activities(target_media_id) WHERE target_media_id IS NOT NULL;
-CREATE INDEX idx_group_activities_target_user ON group_activities(target_user_id) WHERE target_user_id IS NOT NULL; 
+-- H2-compatible indexes (no WHERE clauses)
+CREATE INDEX idx_group_activities_target_media ON group_activities(target_media_id);
+CREATE INDEX idx_group_activities_target_user ON group_activities(target_user_id); 

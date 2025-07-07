@@ -1,0 +1,234 @@
+# =============================================================================
+# ShowSync Staging Environment Configuration
+# =============================================================================
+# Staging configuration for pre-production testing
+# Mirrors production with enhanced logging and debugging capabilities
+# =============================================================================
+
+spring:
+  # Staging database configuration (separate from production)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/showsync_staging}
+    driverClassName: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Connection pool settings for staging
+      maximum-pool-size: 10
+      minimum-idle: 3
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # JPA configuration for staging
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true  # Enable SQL logging for debugging
+    properties:
+      hibernate:
+        format_sql: true  # Format SQL for readability
+        # Enable second-level cache in staging
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+
+  # Flyway configuration for staging
+  flyway:
+    enabled: true
+    # Allow clean in staging for testing
+    clean-disabled: false
+    validate-on-migrate: true
+    baseline-on-migrate: false
+
+  # Redis configuration for staging (separate instance)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}  # Different port for staging
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:1}  # Different database for staging
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 2000ms
+
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION:86400000}
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+server:
+  port: ${SERVER_PORT:8080}
+  
+  # Staging compression settings
+  compression:
+    enabled: true
+    mime-types:
+      - text/html
+      - text/xml
+      - text/plain
+      - text/css
+      - text/javascript
+      - application/javascript
+      - application/json
+      - application/xml
+    min-response-size: 1024
+
+  # Show more error details in staging for debugging
+  error:
+    include-exception: true
+    include-stacktrace: on-param
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  # Enhanced logging levels for staging
+  level:
+    root: INFO
+    # More detailed logging for ShowSync application
+    com.showsync: DEBUG
+    # Spring framework
+    org.springframework: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    # Database logging
+    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    # Flyway logging
+    org.flywaydb: INFO
+    # External API logging
+    reactor.netty: DEBUG
+
+  # File logging for staging
+  file:
+    name: ${LOG_FILE_PATH:logs/showsync-staging.log}
+    max-size: 100MB
+    max-history: 15
+    total-size-cap: 1GB
+
+  # Enhanced logging pattern for staging
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{50}) - %msg%n"
+
+# =============================================================================
+# ACTUATOR CONFIGURATION
+# =============================================================================
+management:
+  # More actuator endpoints for staging debugging
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus,env,configprops,beans,loggers"
+      base-path: /actuator
+
+  # Health check configuration
+  endpoint:
+    health:
+      show-details: always  # Show detailed health info in staging
+      show-components: always
+    metrics:
+      enabled: true
+    env:
+      enabled: true
+      show-values: always  # Show config values in staging
+
+  # Health indicators
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 500MB
+
+  # Metrics configuration
+  metrics:
+    tags:
+      application: showsync-backend
+      environment: staging
+    export:
+      prometheus:
+        enabled: true
+
+# =============================================================================
+# EXTERNAL API CONFIGURATION - STAGING
+# =============================================================================
+external-apis:
+  # TMDb API Configuration for staging
+  tmdb:
+    apiKey: ${TMDB_API_KEY}
+    # Staging cache settings (shorter TTL for testing)
+    cacheTtl: 1800  # 30 minutes
+    rateLimit: 40
+
+  # Open Library API Configuration
+  openLibrary:
+    # Staging cache settings (shorter TTL for testing)
+    cacheTtl: 3600  # 1 hour
+    rateLimit: 100
+
+# =============================================================================
+# APPLICATION-SPECIFIC STAGING SETTINGS
+# =============================================================================
+showsync:
+  # Staging-specific settings
+  staging:
+    # Allow test data creation for testing
+    create-test-data: true
+    # Allow mock external APIs for testing
+    mock-external-apis: false
+    # Detailed error messages for debugging
+    detailed-error-messages: true
+
+# =============================================================================
+# RESILIENCE4J STAGING SETTINGS
+# =============================================================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      tmdb-api:
+        ringBufferSizeInClosedState: 15
+        ringBufferSizeInHalfOpenState: 8
+        failureRateThreshold: 40  # More lenient for testing
+        waitDurationInOpenState: 30s  # Shorter wait for testing
+        slowCallDurationThreshold: 12s
+        
+      openlibrary-api:
+        ringBufferSizeInClosedState: 15
+        ringBufferSizeInHalfOpenState: 8
+        failureRateThreshold: 40
+        waitDurationInOpenState: 30s
+        slowCallDurationThreshold: 15s
+
+  retry:
+    instances:
+      tmdb-api:
+        maxAttempts: 3  # More retries for testing
+        waitDuration: 1s
+      openlibrary-api:
+        maxAttempts: 3
+        waitDuration: 2s
+
+  ratelimiter:
+    instances:
+      tmdb-api:
+        limitForPeriod: 38  # Slightly more permissive for testing
+        limitRefreshPeriod: 60s
+        timeoutDuration: 8s
+      openlibrary-api:
+        limitForPeriod: 90
+        limitRefreshPeriod: 60s
+        timeoutDuration: 8s 

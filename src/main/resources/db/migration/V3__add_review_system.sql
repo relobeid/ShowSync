@@ -36,15 +36,16 @@ CREATE INDEX idx_reviews_media_id ON reviews(media_id);
 CREATE INDEX idx_reviews_created_at ON reviews(created_at DESC);
 CREATE INDEX idx_reviews_rating ON reviews(rating);
 CREATE INDEX idx_reviews_helpful_votes ON reviews(helpful_votes DESC);
-CREATE INDEX idx_reviews_moderated ON reviews(is_moderated) WHERE is_moderated = true;
+-- H2-compatible index (no WHERE clause)
+CREATE INDEX idx_reviews_moderated ON reviews(is_moderated);
 
 CREATE INDEX idx_review_votes_user_id ON review_votes(user_id);
 CREATE INDEX idx_review_votes_review_id ON review_votes(review_id);
 CREATE INDEX idx_review_votes_helpful ON review_votes(is_helpful);
 
 -- Create indexes for trending calculations
-CREATE INDEX idx_reviews_recent_helpful ON reviews(created_at DESC, helpful_votes DESC) 
-    WHERE is_moderated = false;
+-- H2-compatible index (no WHERE clause)
+CREATE INDEX idx_reviews_recent_helpful ON reviews(created_at DESC, helpful_votes DESC);
 
 -- Add check constraints for data integrity
 ALTER TABLE reviews ADD CONSTRAINT chk_reviews_votes_positive 

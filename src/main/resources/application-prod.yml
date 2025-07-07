@@ -1,0 +1,222 @@
+# =============================================================================
+# ShowSync Production Environment Configuration
+# =============================================================================
+# Production configuration with PostgreSQL database and Redis cache
+# All secrets must be provided via environment variables
+# =============================================================================
+
+spring:
+  # Production database configuration
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/showsync_prod}
+    driverClassName: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Connection pool settings for production
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # JPA configuration for production
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        # Enable second-level cache in production
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+
+  # Flyway configuration for production
+  flyway:
+    enabled: true
+    # Never allow clean in production
+    clean-disabled: true
+    validate-on-migrate: true
+    baseline-on-migrate: false
+
+  # Redis configuration for production
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 2000ms
+
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION:86400000}
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+server:
+  port: ${SERVER_PORT:8080}
+  
+  # Production compression settings
+  compression:
+    enabled: true
+    mime-types:
+      - text/html
+      - text/xml
+      - text/plain
+      - text/css
+      - text/javascript
+      - application/javascript
+      - application/json
+      - application/xml
+    min-response-size: 1024
+
+  # Security headers
+  error:
+    include-exception: false
+    include-stacktrace: never
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  # Production logging levels
+  level:
+    root: INFO
+    com.showsync: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.flywaydb: INFO
+
+  # File logging for production
+  file:
+    name: ${LOG_FILE_PATH:logs/showsync-prod.log}
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+
+  # Structured logging pattern for production
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# =============================================================================
+# ACTUATOR CONFIGURATION
+# =============================================================================
+management:
+  # Limited actuator endpoints for production
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+      base-path: /actuator
+
+  # Health check configuration
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+    metrics:
+      enabled: true
+
+  # Health indicators
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 1GB
+
+  # Metrics configuration
+  metrics:
+    tags:
+      application: showsync-backend
+      environment: production
+    export:
+      prometheus:
+        enabled: true
+
+# =============================================================================
+# EXTERNAL API CONFIGURATION - PRODUCTION
+# =============================================================================
+external-apis:
+  # TMDb API Configuration for production
+  tmdb:
+    apiKey: ${TMDB_API_KEY}
+    # Production cache settings
+    cacheTtl: 7200  # 2 hours
+    rateLimit: 40
+
+  # Open Library API Configuration
+  openLibrary:
+    # Production cache settings
+    cacheTtl: 14400  # 4 hours
+    rateLimit: 100
+
+# =============================================================================
+# APPLICATION-SPECIFIC PRODUCTION SETTINGS
+# =============================================================================
+showsync:
+  # Production-specific settings
+  production:
+    # Disable test data creation
+    create-test-data: false
+    # Disable mock external APIs
+    mock-external-apis: false
+    # Minimal error messages for security
+    detailed-error-messages: false
+
+# =============================================================================
+# RESILIENCE4J PRODUCTION SETTINGS
+# =============================================================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      tmdb-api:
+        ringBufferSizeInClosedState: 20
+        ringBufferSizeInHalfOpenState: 10
+        failureRateThreshold: 30
+        waitDurationInOpenState: 60s
+        slowCallDurationThreshold: 15s
+        
+      openlibrary-api:
+        ringBufferSizeInClosedState: 20
+        ringBufferSizeInHalfOpenState: 10
+        failureRateThreshold: 30
+        waitDurationInOpenState: 60s
+        slowCallDurationThreshold: 20s
+
+  retry:
+    instances:
+      tmdb-api:
+        maxAttempts: 2
+        waitDuration: 1s
+      openlibrary-api:
+        maxAttempts: 2
+        waitDuration: 2s
+
+  ratelimiter:
+    instances:
+      tmdb-api:
+        limitForPeriod: 35  # Conservative for production
+        limitRefreshPeriod: 60s
+        timeoutDuration: 10s
+      openlibrary-api:
+        limitForPeriod: 80
+        limitRefreshPeriod: 60s
+        timeoutDuration: 10s 
