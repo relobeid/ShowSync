@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -101,8 +102,8 @@ public class SecurityConfig {
         // Add JWT filter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // For H2 Console (development only)
-        http.headers(headers -> headers.frameOptions().sameOrigin());
+        // Security Headers Configuration
+        http.headers(headers -> configureSecurityHeaders(headers));
 
         return http.build();
     }
@@ -170,5 +171,111 @@ public class SecurityConfig {
         
         // Development: Local development origins only
         return Arrays.asList(allowedOrigins.split(","));
+    }
+    
+    /**
+     * Configure comprehensive security headers based on environment.
+     * 
+     * @param headers HeadersConfigurer for setting security headers
+     */
+    private void configureSecurityHeaders(org.springframework.security.config.annotation.web.configurers.HeadersConfigurer<HttpSecurity> headers) {
+        String[] profiles = environment.getActiveProfiles();
+        boolean isProduction = Arrays.asList(profiles).contains("prod");
+        boolean isDevelopment = Arrays.asList(profiles).contains("dev") || profiles.length == 0;
+        
+        // X-Frame-Options: Prevent clickjacking attacks
+        if (isDevelopment) {
+            // Allow H2 console in development
+            headers.frameOptions().sameOrigin();
+        } else {
+            // Deny all framing in production
+            headers.frameOptions().deny();
+        }
+        
+        // X-Content-Type-Options: Prevent MIME type sniffing
+        headers.contentTypeOptions()
+        
+        // Add custom security headers
+        .and()
+        .addHeaderWriter(new StaticHeadersWriter("X-XSS-Protection", "1; mode=block"))
+        .addHeaderWriter(new StaticHeadersWriter("Referrer-Policy", "strict-origin-when-cross-origin"))
+        .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy", 
+            "geolocation=(), microphone=(), camera=(), payment=(), usb=(), " +
+            "magnetometer=(), accelerometer=(), gyroscope=(), autoplay=()"))
+        .addHeaderWriter(new StaticHeadersWriter("Content-Security-Policy", 
+            buildContentSecurityPolicy(isDevelopment)));
+        
+        // HSTS: Force HTTPS connections (production only)
+        if (isProduction) {
+            headers.addHeaderWriter(new StaticHeadersWriter("Strict-Transport-Security", 
+                "max-age=31536000; includeSubDomains; preload"));
+        }
+    }
+    
+    /**
+     * Build Content Security Policy based on environment.
+     * 
+     * @param isDevelopment whether this is development environment
+     * @return CSP policy string
+     */
+    private String buildContentSecurityPolicy(boolean isDevelopment) {
+        StringBuilder csp = new StringBuilder();
+        
+        // Default source restrictions
+        csp.append("default-src 'self'; ");
+        
+        // Script sources
+        if (isDevelopment) {
+            // More permissive for development (Swagger, dev tools)
+            csp.append("script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; ");
+        } else {
+            // Strict for production
+            csp.append("script-src 'self'; ");
+        }
+        
+        // Style sources
+        if (isDevelopment) {
+            // Allow inline styles for Swagger UI
+            csp.append("style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; ");
+        } else {
+            csp.append("style-src 'self'; ");
+        }
+        
+        // Image sources (allow external images from TMDb, Open Library)
+        csp.append("img-src 'self' data: https://image.tmdb.org https://covers.openlibrary.org; ");
+        
+        // Font sources
+        csp.append("font-src 'self' data:; ");
+        
+        // Connection sources (API endpoints)
+        csp.append("connect-src 'self' https://api.themoviedb.org https://openlibrary.org; ");
+        
+        // Media sources
+        csp.append("media-src 'self'; ");
+        
+        // Object and embed restrictions
+        csp.append("object-src 'none'; ");
+        csp.append("embed-src 'none'; ");
+        
+        // Base URI restrictions
+        csp.append("base-uri 'self'; ");
+        
+        // Frame restrictions
+        if (isDevelopment) {
+            // Allow H2 console frames
+            csp.append("frame-src 'self'; ");
+        } else {
+            csp.append("frame-src 'none'; ");
+        }
+        
+        // Form action restrictions
+        csp.append("form-action 'self'; ");
+        
+        // Upgrade insecure requests in production
+        if (!isDevelopment) {
+            csp.append("upgrade-insecure-requests; ");
+        }
+        
+        return csp.toString();
     }
 } 
