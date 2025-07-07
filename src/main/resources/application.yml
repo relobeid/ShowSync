@@ -530,16 +530,20 @@ resilience4j:
         timeoutDuration: 5s
 
 # =============================================================================
-# APPLICATION-SPECIFIC CONFIGURATION
+# APPLICATION-SPECIFIC CONFIGURATION  
 # =============================================================================
+spring:
+  # Security Configuration
+  security:
+    jwt:
+      # JWT secret key (must be provided via environment variable)
+      secret: ${JWT_SECRET:ZGVmYXVsdC1kZXYtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC1vbmx5LW5vdC1mb3ItcHJvZHVjdGlvbg==}
+      # Token expiration time (24 hours in milliseconds)
+      expiration: ${JWT_EXPIRATION:86400000}
+      # Refresh token expiration (7 days in milliseconds)
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
 app:
-  # JWT Configuration
-  jwt:
-    # Secret key for JWT signing (base64 encoded)
-    # This is a development key - MUST be changed in production
-    secret: c2hvd3N5bmMtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LXB1cnBvc2VzLW9ubHktcGxlYXNlLWNoYW5nZS1pbi1wcm9kdWN0aW9u
-    # Token expiration time (24 hours in milliseconds)
-    expiration: 86400000
 
 showsync:
   # AI and recommendation settings
