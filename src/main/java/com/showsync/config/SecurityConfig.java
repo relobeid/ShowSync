@@ -2,8 +2,10 @@ package com.showsync.config;
 
 import com.showsync.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -22,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -30,6 +33,12 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Autowired
+    private Environment environment;
+    
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -101,13 +110,65 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        
+        // Environment-specific CORS configuration
+        List<String> origins = getEnvironmentSpecificOrigins();
+        configuration.setAllowedOrigins(origins);
+        
+        // Allowed methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Allowed headers
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "X-Requested-With",
+            "Accept",
+            "Origin"
+        ));
+        
+        // Expose headers that client needs to access
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        
+        // Allow credentials only for trusted origins
         configuration.setAllowCredentials(true);
+        
+        // Preflight cache duration (24 hours)
+        configuration.setMaxAge(86400L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+    
+    /**
+     * Get environment-specific allowed origins for CORS.
+     * Development: Local development servers
+     * Production: Only production frontend URLs
+     */
+    private List<String> getEnvironmentSpecificOrigins() {
+        String[] profiles = environment.getActiveProfiles();
+        
+        // Production: Use only configured production origins
+        if (Arrays.asList(profiles).contains("prod")) {
+            String prodOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
+            if (prodOrigins != null && !prodOrigins.trim().isEmpty()) {
+                return Arrays.asList(prodOrigins.split(","));
+            }
+            // Fallback for production - NO wildcards!
+            return Arrays.asList("https://showsync.app", "https://www.showsync.app");
+        }
+        
+        // Staging: Staging-specific origins
+        if (Arrays.asList(profiles).contains("staging")) {
+            return Arrays.asList(
+                "https://staging.showsync.app",
+                "http://localhost:3000",
+                "http://localhost:5173"
+            );
+        }
+        
+        // Development: Local development origins only
+        return Arrays.asList(allowedOrigins.split(","));
     }
 } 

@@ -533,6 +533,11 @@ resilience4j:
 # APPLICATION-SPECIFIC CONFIGURATION  
 # =============================================================================
 app:
+  # CORS Configuration
+  cors:
+    # Allowed origins for CORS requests (development default)
+    # Override with CORS_ALLOWED_ORIGINS environment variable in production
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080}
 
 showsync:
   # AI and recommendation settings
