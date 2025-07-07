@@ -58,8 +58,16 @@ REDIS_HOST=your-redis-host
 REDIS_PORT=6379
 REDIS_PASSWORD=your-redis-password
 
-# Security
-JWT_SECRET=your-base64-encoded-secret-key
+# Security (JWT Authentication)
+# IMPORTANT: Use different secrets for each environment!
+# Generate new secrets with: openssl rand -base64 32
+
+# FOR ANY ENVIRONMENT - Generate your own secret:
+JWT_SECRET=<paste-your-generated-secret-here>
+
+# Example generation:
+# $ openssl rand -base64 32
+# abc123XYZ789... (use the output here)
 
 # External APIs
 TMDB_API_KEY=your-tmdb-api-key
@@ -190,6 +198,36 @@ export TMDB_API_KEY=your-api-key
 2. **Flyway Errors**: Check migration files and database permissions
 3. **Redis Connection**: Verify Redis is running and accessible
 4. **JWT Errors**: Ensure JWT_SECRET is properly base64 encoded
+
+## JWT Secret Management
+
+### Generating Secure Secrets
+Always generate cryptographically secure secrets for each environment:
+```bash
+# Generate a new 256-bit base64-encoded secret
+openssl rand -base64 32
+```
+
+### Environment-Specific Secrets
+- **Development**: Use the provided development secret for local testing
+- **Staging**: Use a separate secret for staging environment 
+- **Production**: Use a unique secret for production (never reuse staging/dev secrets)
+- **Testing**: Use the test-specific secret for unit tests
+
+### Secret Rotation Procedures
+1. **Generate new secret**: `openssl rand -base64 32`
+2. **Update environment variables** in deployment systems
+3. **Restart application** to load new secret
+4. **Verify authentication** still works
+5. **Monitor logs** for any JWT validation errors
+
+### Security Best Practices
+- Rotate JWT secrets every 3-6 months
+- Never commit secrets to version control
+- Use different secrets for each environment
+- Store secrets securely (environment variables, secret managers)
+- Monitor for exposed secrets in logs or error messages
+- Use 256-bit keys minimum for production
 
 ### Debugging
 ```bash

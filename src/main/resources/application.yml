@@ -132,12 +132,12 @@ spring:
   security:
     # JWT token configuration
     jwt:
-      # Secret key for JWT signing (overridden in environment-specific configs)
-      secret: changeme-in-production
-      # Token expiration time (24 hours)
-      expiration: 86400000
-      # Refresh token expiration (7 days)
-      refresh-expiration: 604800000
+      # JWT secret key (must be provided via environment variable)
+      secret: ${JWT_SECRET:ZGVmYXVsdC1kZXYtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC1vbmx5LW5vdC1mb3ItcHJvZHVjdGlvbg==}
+      # Token expiration time (24 hours in milliseconds)  
+      expiration: ${JWT_EXPIRATION:86400000}
+      # Refresh token expiration (7 days in milliseconds)
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   
   # =============================================================================
   # JSON PROCESSING
@@ -532,17 +532,6 @@ resilience4j:
 # =============================================================================
 # APPLICATION-SPECIFIC CONFIGURATION  
 # =============================================================================
-spring:
-  # Security Configuration
-  security:
-    jwt:
-      # JWT secret key (must be provided via environment variable)
-      secret: ${JWT_SECRET:ZGVmYXVsdC1kZXYtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC1vbmx5LW5vdC1mb3ItcHJvZHVjdGlvbg==}
-      # Token expiration time (24 hours in milliseconds)
-      expiration: ${JWT_EXPIRATION:86400000}
-      # Refresh token expiration (7 days in milliseconds)
-      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
-
 app:
 
 showsync:
