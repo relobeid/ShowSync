@@ -1,0 +1,110 @@
+# =============================================================================
+# ShowSync Railway Environment Configuration
+# =============================================================================
+# Railway-specific configuration for production deployment
+# Railway provides DATABASE_URL, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
+# =============================================================================
+
+spring:
+  profiles:
+    active: railway
+  
+  # Database configuration (Railway provides DATABASE_URL)
+  datasource:
+    url: ${DATABASE_URL}
+    driverClassName: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  # JPA configuration for Railway
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+
+  # Flyway configuration
+  flyway:
+    enabled: true
+    clean-disabled: true
+    validate-on-migrate: true
+    baseline-on-migrate: false
+
+  # Redis configuration (Railway provides REDIS_* variables)
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 2000ms
+
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION:86400000}
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# Server configuration
+server:
+  port: ${PORT:8080}
+  
+  # Compression for better performance
+  compression:
+    enabled: true
+    mime-types:
+      - text/html
+      - text/xml
+      - text/plain
+      - text/css
+      - text/javascript
+      - application/javascript
+      - application/json
+      - application/xml
+    min-response-size: 1024
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.showsync: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.flywaydb: INFO
+
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# External API configuration
+external-apis:
+  tmdb:
+    apiKey: ${TMDB_API_KEY}
+    cacheTtl: 7200  # 2 hours
+    rateLimit: 40
+
+  openLibrary:
+    cacheTtl: 14400  # 4 hours
+    rateLimit: 100
+
+# Application-specific settings
+showsync:
+  production:
+    create-test-data: false
+    mock-external-apis: false
+    detailed-error-messages: false 
