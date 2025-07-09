@@ -1,5 +1,5 @@
 # Multi-stage build for Railway deployment
-FROM maven:3.9-openjdk-17-slim AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
 # Production stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/target/*.jar app.jar
 
 # Create non-root user for security
-RUN addgroup --system spring && adduser --system spring --ingroup spring
+RUN groupadd --system spring && useradd --system spring --ingroup spring
 RUN chown -R spring:spring /app
 USER spring:spring
 
