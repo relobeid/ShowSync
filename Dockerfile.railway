@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/target/*.jar app.jar
 
 # Create non-root user for security
-RUN groupadd --system spring && useradd --system spring --ingroup spring
+RUN groupadd -r spring && useradd -r -g spring spring
 RUN chown -R spring:spring /app
 USER spring
 
