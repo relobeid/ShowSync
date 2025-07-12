@@ -1,3 +1,5 @@
+import { AuthRequest, AuthResponse, RegisterRequest, User } from '@/types/api';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 /**
@@ -20,7 +22,8 @@ export const api = {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       return response;
@@ -88,6 +91,49 @@ export const api = {
 
     const response = await this.fetch(endpoint, { method: 'DELETE', headers });
     return response.json();
+  },
+
+  // Authentication specific methods
+  auth: {
+    /**
+     * Login user
+     */
+    async login(credentials: AuthRequest): Promise<AuthResponse> {
+      const response = await api.post('/api/auth/login', credentials);
+      return response;
+    },
+
+    /**
+     * Register new user
+     */
+    async register(userData: RegisterRequest): Promise<AuthResponse> {
+      const response = await api.post('/api/auth/register', userData);
+      return response;
+    },
+
+    /**
+     * Get current user profile
+     */
+    async getProfile(token: string): Promise<User> {
+      const response = await api.get('/api/auth/profile', token);
+      return response;
+    },
+
+    /**
+     * Update user profile
+     */
+    async updateProfile(profileData: Partial<User>, token: string): Promise<User> {
+      const response = await api.put('/api/auth/profile', profileData, token);
+      return response;
+    },
+  },
+
+  // Health check
+  health: {
+    async check() {
+      const response = await api.get('/api/health');
+      return response;
+    },
   },
 };
 
