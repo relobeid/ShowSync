@@ -98,18 +98,18 @@ export default function Header() {
               </div>
             ) : (
               <>
-                <Link
-                  href="/auth/login"
-                  className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  Sign Up
-                </Link>
+            <Link
+              href="/auth/login"
+              className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium"
+            >
+              Login
+            </Link>
+            <Link
+              href="/auth/register"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              Sign Up
+            </Link>
               </>
             )}
           </div>
