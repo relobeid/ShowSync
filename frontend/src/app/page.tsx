@@ -14,7 +14,7 @@ export default function Home() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-2">Track Your Media</h2>
             <p className="text-gray-600">
-              Keep track of movies, TV shows, and books you've watched or want to watch.
+              Keep track of movies, TV shows, and books you&apos;ve watched or want to watch.
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md">
