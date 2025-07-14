@@ -93,6 +93,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           username: authData.username,
           email: authData.email,
           displayName: authData.username, // Backend doesn't return displayName in AuthResponse
+          role: authData.role,
+          emailVerified: false, // Default value, will be updated when profile is fetched
           isActive: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -131,6 +133,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           username: authData.username,
           email: authData.email,
           displayName: displayName,
+          role: authData.role,
+          emailVerified: false, // Default value, will be updated when profile is fetched
           isActive: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

@@ -50,7 +50,9 @@ export const api = {
    * POST request
    */
   async post(endpoint: string, data: unknown, token?: string) {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -67,7 +69,9 @@ export const api = {
    * PUT request
    */
   async put(endpoint: string, data: unknown, token?: string) {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }

@@ -35,9 +35,12 @@ export interface User {
   displayName: string;
   profilePictureUrl?: string;
   bio?: string;
+  role: string;
+  emailVerified: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string;
 }
 
 // Media Types
