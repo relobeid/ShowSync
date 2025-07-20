@@ -61,7 +61,6 @@ export default function Header() {
           {/* Logo */}
           <div className="flex items-center animate-slide-in">
             <Link href="/" className="flex items-center group">
-              <div className="movie-reel w-8 h-8 mr-3 scale-75"></div>
               <span className="text-2xl font-bold gradient-text">ShowSync</span>
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse ml-2"></div>
             </Link>
