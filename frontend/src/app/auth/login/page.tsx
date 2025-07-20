@@ -81,7 +81,7 @@ export default function LoginPage() {
             Welcome back
           </h2>
           <p className="text-gray-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link 
               href="/auth/register"
               className="text-red-400 hover:text-red-300 font-medium transition-colors"

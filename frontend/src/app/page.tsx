@@ -309,7 +309,7 @@ export default function Home() {
               Rate Your Universe
             </h3>
             <p className="text-gray-300 leading-relaxed">
-              <span className="text-cyan-400 font-semibold">"The truth is out there..."</span> Rate sci-fi classics, space operas, and alien encounters. Our AI will decode your cosmic preferences faster than light speed!
+              <span className="text-cyan-400 font-semibold">&quot;The truth is out there...&quot;</span> Rate sci-fi classics, space operas, and alien encounters. Our AI will decode your cosmic preferences faster than light speed!
             </p>
           </div>
 
@@ -374,7 +374,7 @@ export default function Home() {
               Round Up Your Posse
             </h3>
             <p className="text-orange-100 leading-relaxed">
-              <span className="text-yellow-300 font-semibold">"There's a new sheriff in town..."</span> Our AI wrangles up folks who share your taste in westerns, gritty dramas, and classic showdowns. Saddle up, partner!
+              <span className="text-yellow-300 font-semibold">&quot;There&apos;s a new sheriff in town...&quot;</span> Our AI wrangles up folks who share your taste in westerns, gritty dramas, and classic showdowns. Saddle up, partner!
             </p>
           </div>
 
@@ -447,7 +447,7 @@ export default function Home() {
               Anime Community
             </h3>
             <p className="text-pink-100 leading-relaxed">
-              <span className="text-yellow-300 font-semibold">"The power of friendship!"</span> Connect with anime fans instantly! Discuss epic battles, share favorite series, and discover hidden gems. Join passionate discussions about everything from classics to seasonal hits.
+              <span className="text-yellow-300 font-semibold">&quot;The power of friendship!&quot;</span> Connect with anime fans instantly! Discuss epic battles, share favorite series, and discover hidden gems. Join passionate discussions about everything from classics to seasonal hits.
             </p>
           </div>
           </div>
@@ -496,10 +496,10 @@ export default function Home() {
                     </div>
                   </div>
                   <p className="text-gray-300 leading-relaxed mb-4">
-                    "{testimonial.review}"
+                    &quot;{testimonial.review}&quot;
                   </p>
                   <div className="text-sm text-yellow-400">
-                    ⭐⭐⭐⭐⭐ "{testimonial.rating}"
+                    ⭐⭐⭐⭐⭐ &quot;{testimonial.rating}&quot;
                   </div>
                 </div>
               ))}

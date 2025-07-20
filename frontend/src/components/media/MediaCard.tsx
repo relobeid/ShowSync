@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 interface MediaCardProps {
   id: number;
   type: 'MOVIE' | 'TV_SHOW' | 'BOOK';
@@ -10,7 +12,7 @@ interface MediaCardProps {
   voteAverage?: number;
   voteCount?: number;
   posterPath?: string | null;
-  backdropPath?: string | null;
+
   onAddToLibrary?: (id: number) => void;
   onViewDetails?: (id: number) => void;
 }
@@ -25,7 +27,6 @@ export default function MediaCard({
   voteAverage,
   voteCount,
   posterPath,
-  backdropPath,
   onAddToLibrary,
   onViewDetails,
 }: MediaCardProps) {
@@ -57,20 +58,18 @@ export default function MediaCard({
     return new Date(date).getFullYear();
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    e.currentTarget.src = '/placeholder-media.jpg'; // You can add a placeholder image
-  };
+
 
   return (
     <div className="media-card group relative overflow-hidden">
       {/* Poster/Image */}
       <div className="relative aspect-[2/3] overflow-hidden bg-gray-800">
         {posterPath ? (
-          <img
+          <Image
             src={`https://image.tmdb.org/t/p/w500${posterPath}`}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            onError={handleImageError}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">

@@ -130,7 +130,7 @@ export default function SearchPage() {
                 ].map(({ key, label, icon }) => (
                   <button
                     key={key}
-                    onClick={() => setMediaType(key as any)}
+                    onClick={() => setMediaType(key as 'all' | 'movies' | 'tv' | 'books')}
                     className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 ${
                       mediaType === key
                         ? 'bg-red-600 text-white shadow-lg'
@@ -222,7 +222,7 @@ export default function SearchPage() {
               
               {searchQuery && (
                 <p className="text-gray-400">
-                  Showing results for "<span className="text-white font-medium">{searchQuery}</span>" 
+                  Showing results for &quot;<span className="text-white font-medium">{searchQuery}</span>&quot; 
                   • {filteredMedia.length} matches found
                 </p>
               )}
