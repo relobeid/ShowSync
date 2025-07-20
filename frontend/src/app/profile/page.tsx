@@ -4,8 +4,46 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Layout from '@/components/layout/Layout';
+import MediaCard from '@/components/media/MediaCard';
 import { api } from '@/lib/api';
 import { User } from '@/types/api';
+
+// Sample media data for demonstration
+const sampleMedia = [
+  {
+    id: 1,
+    type: 'MOVIE' as const,
+    title: 'The Matrix',
+    originalTitle: 'The Matrix',
+    overview: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
+    releaseDate: '1999-03-30',
+    voteAverage: 8.2,
+    voteCount: 26573,
+    posterPath: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+  },
+  {
+    id: 2,
+    type: 'TV_SHOW' as const,
+    title: 'Breaking Bad',
+    originalTitle: 'Breaking Bad',
+    overview: 'A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.',
+    releaseDate: '2008-01-20',
+    voteAverage: 9.5,
+    voteCount: 12500,
+    posterPath: '/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg',
+  },
+  {
+    id: 3,
+    type: 'BOOK' as const,
+    title: 'The Hobbit',
+    originalTitle: 'The Hobbit',
+    overview: 'Bilbo Baggins enjoys a quiet and contented life, with no desire to travel far from the comforts of home.',
+    releaseDate: '1937-09-21',
+    voteAverage: 4.8,
+    voteCount: 2500,
+    posterPath: null,
+  }
+];
 
 export default function ProfilePage() {
   const { token } = useAuth();
@@ -69,22 +107,10 @@ export default function ProfilePage() {
 
     if (!formData.displayName.trim()) {
       newErrors.displayName = 'Display name is required';
-    } else if (formData.displayName.length < 2) {
-      newErrors.displayName = 'Display name must be at least 2 characters';
-    } else if (formData.displayName.length > 50) {
-      newErrors.displayName = 'Display name must be less than 50 characters';
     }
 
     if (formData.bio && formData.bio.length > 500) {
       newErrors.bio = 'Bio must be less than 500 characters';
-    }
-
-    if (formData.profilePictureUrl && formData.profilePictureUrl.length > 0) {
-      try {
-        new URL(formData.profilePictureUrl);
-      } catch {
-        newErrors.profilePictureUrl = 'Please enter a valid URL';
-      }
     }
 
     setErrors(newErrors);
@@ -99,56 +125,28 @@ export default function ProfilePage() {
     setSaving(true);
     setError('');
     setSuccess('');
-    
+
     try {
-      const updatedProfile = await api.auth.updateProfile(formData, token!);
-      setProfileUser(prev => prev ? { ...prev, ...updatedProfile } : null);
+      const updatedUser = await api.auth.updateProfile(formData, token!);
+      setProfileUser(updatedUser);
       setIsEditing(false);
       setSuccess('Profile updated successfully!');
     } catch (error) {
-      console.error('Error updating profile:', error);
       setError(error instanceof Error ? error.message : 'Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
   if (loading) {
     return (
       <ProtectedRoute>
         <Layout>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading profile...</p>
-            </div>
-          </div>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
-
-  if (!profileUser) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <div className="max-w-4xl mx-auto py-8 px-4">
-            <div className="text-center">
-              <p className="text-red-600">Failed to load profile data</p>
-              <button 
-                onClick={fetchProfile}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Try Again
-              </button>
+          <div className="animate-fade-in">
+            <div className="text-center py-12">
+              <div className="skeleton w-32 h-32 rounded-full mx-auto mb-4"></div>
+              <div className="skeleton w-48 h-6 mx-auto mb-2"></div>
+              <div className="skeleton w-64 h-4 mx-auto"></div>
             </div>
           </div>
         </Layout>
@@ -159,224 +157,145 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <Layout>
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
-              <div className="flex items-center space-x-6">
-                                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                   {profileUser.profilePictureUrl ? (
-                     <img 
-                       src={profileUser.profilePictureUrl} 
-                       alt="Profile" 
-                       className="w-full h-full object-cover"
-                       onError={(e) => {
-                         e.currentTarget.style.display = 'none';
-                         e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                       }}
-                     />
-                   ) : null}
-                   <div className={`text-3xl font-bold text-blue-600 ${profileUser.profilePictureUrl ? 'hidden' : ''}`}>
-                     {profileUser.displayName?.charAt(0).toUpperCase() || profileUser.username.charAt(0).toUpperCase()}
-                   </div>
-                 </div>
-                 <div className="text-white">
-                   <h1 className="text-3xl font-bold">{profileUser.displayName || profileUser.username}</h1>
-                   <p className="text-blue-100">@{profileUser.username}</p>
-                   <p className="text-blue-100">{profileUser.email}</p>
-                 </div>
+        <div className="animate-fade-in">
+          {/* Profile Header */}
+          <div className="glass-effect rounded-2xl p-8 mb-8 border border-gray-700">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              {/* Avatar */}
+              <div className="w-32 h-32 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-2xl">
+                {profileUser?.displayName?.[0]?.toUpperCase() || profileUser?.username[0].toUpperCase()}
+              </div>
+
+              {/* Profile Info */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                  <h1 className="text-title">
+                    {profileUser?.displayName || profileUser?.username}
+                  </h1>
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="btn-secondary text-sm px-4 py-2"
+                  >
+                    {isEditing ? '❌ Cancel' : '✏️ Edit Profile'}
+                  </button>
+                </div>
+                
+                <p className="text-gray-400 mb-2">@{profileUser?.username}</p>
+                <p className="text-gray-300 mb-4">{profileUser?.email}</p>
+                
+                {profileUser?.bio && (
+                  <p className="text-gray-300 leading-relaxed">{profileUser.bio}</p>
+                )}
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6">
-              {/* Success/Error Messages */}
-              {success && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-md">
-                  {success}
-                </div>
-              )}
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-700">
+              <div className="text-center">
+                <div className="text-2xl font-bold gradient-text mb-1">24</div>
+                <div className="text-gray-400 text-sm">Movies Watched</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold gradient-text mb-1">8</div>
+                <div className="text-gray-400 text-sm">TV Shows</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold gradient-text mb-1">12</div>
+                <div className="text-gray-400 text-sm">Books Read</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Edit Form */}
+          {isEditing && (
+            <div className="glass-effect rounded-2xl p-8 mb-8 border border-gray-700 animate-scale-in">
+              <h2 className="text-subtitle mb-6">Edit Profile</h2>
               
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-md">
-                  {error}
+                <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-6">
+                  <p className="text-red-400">{error}</p>
                 </div>
               )}
 
-              {!isEditing ? (
-                // Display Mode
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Edit Profile
-                    </button>
-                  </div>
-
-                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-                       <p className="text-gray-900">{profileUser.displayName || 'Not set'}</p>
-                     </div>
-                     
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                       <p className="text-gray-900 capitalize">{profileUser.role.toLowerCase()}</p>
-                     </div>
-
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Member Since</label>
-                       <p className="text-gray-900">{formatDate(profileUser.createdAt)}</p>
-                     </div>
-
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Email Status</label>
-                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                         profileUser.emailVerified 
-                           ? 'bg-green-100 text-green-800' 
-                           : 'bg-yellow-100 text-yellow-800'
-                       }`}>
-                         {profileUser.emailVerified ? 'Verified' : 'Unverified'}
-                       </span>
-                     </div>
-
-                     {profileUser.lastLoginAt && (
-                       <div>
-                         <label className="block text-sm font-medium text-gray-700 mb-1">Last Login</label>
-                         <p className="text-gray-900">{formatDate(profileUser.lastLoginAt)}</p>
-                       </div>
-                     )}
-                   </div>
-
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-                     <p className="text-gray-900 whitespace-pre-wrap">
-                       {profileUser.bio || 'No bio added yet.'}
-                     </p>
-                   </div>
-                </div>
-              ) : (
-                // Edit Mode
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
-                    <button
-                      onClick={() => {
-                        setIsEditing(false);
-                        setErrors({});
-                        setError('');
-                        setSuccess('');
-                                                 // Reset form data
-                         setFormData({
-                           displayName: profileUser.displayName || '',
-                           bio: profileUser.bio || '',
-                           profilePictureUrl: profileUser.profilePictureUrl || '',
-                         });
-                      }}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                      <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
-                        Display Name *
-                      </label>
-                      <input
-                        type="text"
-                        id="displayName"
-                        name="displayName"
-                        value={formData.displayName}
-                        onChange={handleChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.displayName ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="Enter your display name"
-                      />
-                      {errors.displayName && (
-                        <p className="mt-1 text-sm text-red-600">{errors.displayName}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label htmlFor="profilePictureUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                        Profile Picture URL
-                      </label>
-                      <input
-                        type="url"
-                        id="profilePictureUrl"
-                        name="profilePictureUrl"
-                        value={formData.profilePictureUrl}
-                        onChange={handleChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.profilePictureUrl ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="https://example.com/your-photo.jpg"
-                      />
-                      {errors.profilePictureUrl && (
-                        <p className="mt-1 text-sm text-red-600">{errors.profilePictureUrl}</p>
-                      )}
-                      <p className="mt-1 text-sm text-gray-500">
-                        Enter a URL to your profile picture
-                      </p>
-                    </div>
-
-                    <div>
-                      <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                        Bio
-                      </label>
-                      <textarea
-                        id="bio"
-                        name="bio"
-                        rows={4}
-                        value={formData.bio}
-                        onChange={handleChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.bio ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="Tell us about yourself..."
-                      />
-                      {errors.bio && (
-                        <p className="mt-1 text-sm text-red-600">{errors.bio}</p>
-                      )}
-                      <p className="mt-1 text-sm text-gray-500">
-                        {formData.bio.length}/500 characters
-                      </p>
-                    </div>
-
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsEditing(false);
-                          setErrors({});
-                          setError('');
-                          setSuccess('');
-                        }}
-                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={saving}
-                        className={`px-6 py-2 rounded-md text-white transition-colors ${
-                          saving
-                            ? 'bg-blue-400 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700'
-                        }`}
-                      >
-                        {saving ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </div>
-                  </form>
+              {success && (
+                <div className="bg-green-900/20 border border-green-800 rounded-xl p-4 mb-6">
+                  <p className="text-green-400">{success}</p>
                 </div>
               )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    name="displayName"
+                    value={formData.displayName}
+                    onChange={handleChange}
+                    className={`input-field ${errors.displayName ? 'border-red-500' : ''}`}
+                    maxLength={50}
+                  />
+                  {errors.displayName && (
+                    <p className="mt-1 text-sm text-red-400">{errors.displayName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Bio
+                  </label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    rows={4}
+                    className={`input-field ${errors.bio ? 'border-red-500' : ''}`}
+                    placeholder="Tell us about yourself..."
+                    maxLength={500}
+                  />
+                  <div className="flex justify-between mt-1">
+                    {errors.bio && <p className="text-sm text-red-400">{errors.bio}</p>}
+                    <p className="text-sm text-gray-500 ml-auto">
+                      {formData.bio.length}/500
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn-primary flex-1"
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Recent Activity / Library Preview */}
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-subtitle mb-6">Your Library Preview</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sampleMedia.map((media) => (
+                  <MediaCard
+                    key={media.id}
+                    {...media}
+                    onAddToLibrary={(id) => console.log('Add to library:', id)}
+                    onViewDetails={(id) => console.log('View details:', id)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>

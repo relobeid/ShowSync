@@ -67,27 +67,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to ShowSync
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 animate-fade-in">
+        {/* Logo */}
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-6">
+            <Link href="/" className="flex items-center group">
+              <span className="text-3xl font-bold gradient-text">ShowSync</span>
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse ml-2"></div>
+            </Link>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Welcome back
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+          <p className="text-gray-400">
+            Don't have an account?{' '}
             <Link 
               href="/auth/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="text-red-400 hover:text-red-300 font-medium transition-colors"
             >
-              create a new account
+              Sign up here
             </Link>
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+        {/* Login Form */}
+        <div className="glass-effect rounded-2xl p-8 border border-gray-700">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="username" className="sr-only">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
                 Username
               </label>
               <input
@@ -95,20 +103,23 @@ export default function LoginPage() {
                 name="username"
                 type="text"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  errors.username ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
-                placeholder="Username"
+                className={`input-field ${
+                  errors.username ? 'border-red-500 focus:border-red-500' : ''
+                }`}
+                placeholder="Enter your username"
                 value={formData.username}
                 onChange={handleChange}
               />
               {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                <p className="mt-2 text-sm text-red-400 flex items-center">
+                  <span className="mr-1">⚠️</span>
+                  {errors.username}
+                </p>
               )}
             </div>
             
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -116,39 +127,86 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
-                placeholder="Password"
+                className={`input-field ${
+                  errors.password ? 'border-red-500 focus:border-red-500' : ''
+                }`}
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleChange}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                <p className="mt-2 text-sm text-red-400 flex items-center">
+                  <span className="mr-1">⚠️</span>
+                  {errors.password}
+                </p>
               )}
             </div>
-          </div>
 
-          {errors.submit && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{errors.submit}</p>
-            </div>
-          )}
+            {errors.submit && (
+              <div className="bg-red-900/20 border border-red-800 rounded-xl p-4">
+                <p className="text-sm text-red-400 flex items-center">
+                  <span className="mr-2">❌</span>
+                  {errors.submit}
+                </p>
+              </div>
+            )}
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                loading
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+              className={`w-full btn-primary text-lg py-4 ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Signing in...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center">
+                  🚀 Sign In
+                </span>
+              )}
             </button>
+          </form>
+
+          {/* Forgot Password */}
+          <div className="mt-6 text-center">
+            <Link
+              href="#"
+              className="text-sm text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              Forgot your password?
+            </Link>
           </div>
-        </form>
+        </div>
+
+        {/* Demo Account */}
+        <div className="text-center">
+          <div className="bg-blue-900/20 border border-blue-800 rounded-xl p-4">
+            <p className="text-sm text-blue-400 mb-2">
+              💡 Demo Account
+            </p>
+            <p className="text-xs text-gray-400">
+              Username: <span className="font-mono text-blue-300">demo</span> • 
+              Password: <span className="font-mono text-blue-300">demo123</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Back to Home */}
+        <div className="text-center">
+          <Link
+            href="/"
+            className="text-sm text-gray-400 hover:text-gray-300 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );
