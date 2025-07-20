@@ -95,19 +95,26 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your ShowSync account
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 animate-fade-in">
+        {/* Logo */}
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-6">
+            <Link href="/" className="flex items-center group">
+              <span className="text-3xl font-bold gradient-text">ShowSync</span>
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse ml-2"></div>
+            </Link>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Join the Club
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+          <p className="text-gray-400">
+            Already have an account?{' '}
             <Link 
               href="/auth/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="text-red-400 hover:text-red-300 font-medium transition-colors"
             >
-              sign in to your existing account
+              Sign in here
             </Link>
           </p>
         </div>
@@ -240,6 +247,19 @@ export default function RegisterPage() {
             </button>
           </div>
         </form>
+
+        {/* Back to Home */}
+        <div className="text-center">
+          <Link
+            href="/"
+            className="text-sm text-gray-400 hover:text-gray-300 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

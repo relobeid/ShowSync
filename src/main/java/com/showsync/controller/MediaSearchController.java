@@ -15,15 +15,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.time.Duration;
 
 /**
  * REST Controller for media search operations.
@@ -42,14 +41,6 @@ import jakarta.validation.constraints.Size;
  * 
  * Security:
  * All endpoints require user authentication (ROLE_USER or higher).
- * 
- * KNOWN ISSUE:
- * External API integration works perfectly (TMDb returns data successfully),
- * but reactive Mono response delivery has configuration issue causing 403
- * responses to reach client despite successful backend processing.
- * See logs for "Movie search completed successfully" vs client 403 status.
- * 
- * TODO: Investigate reactive response delivery in Spring Security context
  * 
  * @author ShowSync Development Team
  * @version 0.1.0
@@ -82,7 +73,7 @@ public class MediaSearchController {
         @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "503", description = "External API service unavailable")
     })
-    public Mono<ResponseEntity<TmdbSearchResponse<TmdbMovieResponse>>> searchMovies(
+    public ResponseEntity<TmdbSearchResponse<TmdbMovieResponse>> searchMovies(
             @Parameter(description = "Search query", required = true, example = "The Matrix")
             @RequestParam @NotBlank @Size(min = 1, max = 100) String query,
             
@@ -91,11 +82,21 @@ public class MediaSearchController {
         
         log.info("Movie search request: query='{}', page={}", query, page);
         
-        return externalMediaService.searchMovies(query, page)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(response -> log.debug("Movie search completed successfully"))
-                .doOnError(error -> log.error("Movie search failed", error))
-                .onErrorReturn(ResponseEntity.status(503).build());
+        try {
+            TmdbSearchResponse<TmdbMovieResponse> response = externalMediaService.searchMovies(query, page)
+                    .block(Duration.ofSeconds(10));
+                    
+            if (response != null) {
+                log.debug("Movie search completed successfully: {} results found", response.getTotalResults());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Movie search returned null response");
+                return ResponseEntity.status(503).build();
+            }
+        } catch (Exception e) {
+            log.error("Movie search failed for query: {}", query, e);
+            return ResponseEntity.status(503).build();
+        }
     }
 
     /**
@@ -115,7 +116,7 @@ public class MediaSearchController {
         @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "503", description = "External API service unavailable")
     })
-    public Mono<ResponseEntity<TmdbSearchResponse<TmdbTvShowResponse>>> searchTvShows(
+    public ResponseEntity<TmdbSearchResponse<TmdbTvShowResponse>> searchTvShows(
             @Parameter(description = "Search query", required = true, example = "Breaking Bad")
             @RequestParam @NotBlank @Size(min = 1, max = 100) String query,
             
@@ -124,11 +125,21 @@ public class MediaSearchController {
         
         log.info("TV show search request: query='{}', page={}", query, page);
         
-        return externalMediaService.searchTvShows(query, page)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(response -> log.debug("TV show search completed successfully"))
-                .doOnError(error -> log.error("TV show search failed", error))
-                .onErrorReturn(ResponseEntity.status(503).build());
+        try {
+            TmdbSearchResponse<TmdbTvShowResponse> response = externalMediaService.searchTvShows(query, page)
+                    .block(Duration.ofSeconds(10));
+                    
+            if (response != null) {
+                log.debug("TV show search completed successfully: {} results found", response.getTotalResults());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("TV show search returned null response");
+                return ResponseEntity.status(503).build();
+            }
+        } catch (Exception e) {
+            log.error("TV show search failed for query: {}", query, e);
+            return ResponseEntity.status(503).build();
+        }
     }
 
     /**
@@ -149,7 +160,7 @@ public class MediaSearchController {
         @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "503", description = "External API service unavailable")
     })
-    public Mono<ResponseEntity<OpenLibrarySearchResponse>> searchBooks(
+    public ResponseEntity<OpenLibrarySearchResponse> searchBooks(
             @Parameter(description = "Search query", required = true, example = "The Lord of the Rings")
             @RequestParam @NotBlank @Size(min = 1, max = 100) String query,
             
@@ -161,11 +172,21 @@ public class MediaSearchController {
         
         log.info("Book search request: query='{}', limit={}, offset={}", query, limit, offset);
         
-        return externalMediaService.searchBooks(query, limit, offset)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(response -> log.debug("Book search completed successfully"))
-                .doOnError(error -> log.error("Book search failed", error))
-                .onErrorReturn(ResponseEntity.status(503).build());
+        try {
+            OpenLibrarySearchResponse response = externalMediaService.searchBooks(query, limit, offset)
+                    .block(Duration.ofSeconds(15));
+                    
+            if (response != null) {
+                log.debug("Book search completed successfully: {} results found", response.getNumFound());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Book search returned null response");
+                return ResponseEntity.status(503).build();
+            }
+        } catch (Exception e) {
+            log.error("Book search failed for query: {}", query, e);
+            return ResponseEntity.status(503).build();
+        }
     }
 
     /**
@@ -185,17 +206,27 @@ public class MediaSearchController {
         @ApiResponse(responseCode = "404", description = "Movie not found"),
         @ApiResponse(responseCode = "503", description = "External API service unavailable")
     })
-    public Mono<ResponseEntity<TmdbMovieResponse>> getMovieDetails(
+    public ResponseEntity<TmdbMovieResponse> getMovieDetails(
             @Parameter(description = "TMDb movie ID", required = true, example = "603")
             @PathVariable @Min(1) Long movieId) {
         
         log.info("Movie details request: movieId={}", movieId);
         
-        return externalMediaService.getMovieDetails(movieId)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(response -> log.debug("Movie details retrieved successfully"))
-                .doOnError(error -> log.error("Movie details retrieval failed", error))
-                .onErrorReturn(ResponseEntity.notFound().build());
+        try {
+            TmdbMovieResponse response = externalMediaService.getMovieDetails(movieId)
+                    .block(Duration.ofSeconds(10));
+                    
+            if (response != null) {
+                log.debug("Movie details retrieved successfully: title='{}'", response.getTitle());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Movie details returned null for ID: {}", movieId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Movie details retrieval failed for ID: {}", movieId, e);
+            return ResponseEntity.status(503).build();
+        }
     }
 
     /**
@@ -215,16 +246,26 @@ public class MediaSearchController {
         @ApiResponse(responseCode = "404", description = "TV show not found"),
         @ApiResponse(responseCode = "503", description = "External API service unavailable")
     })
-    public Mono<ResponseEntity<TmdbTvShowResponse>> getTvShowDetails(
+    public ResponseEntity<TmdbTvShowResponse> getTvShowDetails(
             @Parameter(description = "TMDb TV show ID", required = true, example = "1396")
             @PathVariable @Min(1) Long tvShowId) {
         
         log.info("TV show details request: tvShowId={}", tvShowId);
         
-        return externalMediaService.getTvShowDetails(tvShowId)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(response -> log.debug("TV show details retrieved successfully"))
-                .doOnError(error -> log.error("TV show details retrieval failed", error))
-                .onErrorReturn(ResponseEntity.notFound().build());
+        try {
+            TmdbTvShowResponse response = externalMediaService.getTvShowDetails(tvShowId)
+                    .block(Duration.ofSeconds(10));
+                    
+            if (response != null) {
+                log.debug("TV show details retrieved successfully: name='{}'", response.getName());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("TV show details returned null for ID: {}", tvShowId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("TV show details retrieval failed for ID: {}", tvShowId, e);
+            return ResponseEntity.status(503).build();
+        }
     }
 } 
