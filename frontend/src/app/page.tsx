@@ -245,8 +245,8 @@ export default function Home() {
               <div>
                 <h3 className="text-xl lg:text-2xl font-bold text-white mb-3 lg:mb-4">AI-Powered Discovery</h3>
                 <p className="text-gray-300 mb-4 lg:mb-6">
-                  Our advanced AI learns your preferences and suggests content you'll love, 
-                  even from genres you haven't explored yet.
+                  Our advanced AI learns your preferences and suggests content you&apos;ll love, 
+                  even from genres you haven&apos;t explored yet.
                 </p>
                 <ul className="space-y-2 text-gray-400 text-sm lg:text-base">
                   <li className="flex items-center"><span className="text-blue-400 mr-2">✓</span> Personalized recommendations</li>
@@ -308,7 +308,7 @@ export default function Home() {
             What Our Users Say
           </h2>
           <p className="text-gray-400 text-lg lg:text-xl max-w-3xl mx-auto animate-fade-in mobile-px-4" style={{ animationDelay: '0.2s' }}>
-            Join thousands of entertainment enthusiasts who've found their perfect companion.
+            Join thousands of entertainment enthusiasts who&apos;ve found their perfect companion.
           </p>
         </div>
 
