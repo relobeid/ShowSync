@@ -142,11 +142,11 @@ export default function ProfilePage() {
     return (
       <ProtectedRoute>
         <Layout>
-          <div className="animate-fade-in">
-            <div className="text-center py-12">
-              <div className="skeleton w-32 h-32 rounded-full mx-auto mb-4"></div>
-              <div className="skeleton w-48 h-6 mx-auto mb-2"></div>
-              <div className="skeleton w-64 h-4 mx-auto"></div>
+          <div className="container-responsive mobile-py-8 lg:py-12 animate-fade-in">
+            <div className="text-center">
+              <div className="skeleton w-24 h-24 lg:w-32 lg:h-32 rounded-full mx-auto mb-4 lg:mb-6"></div>
+              <div className="skeleton w-32 lg:w-48 h-6 lg:h-8 mx-auto mb-2 lg:mb-3"></div>
+              <div className="skeleton w-48 lg:w-64 h-4 lg:h-5 mx-auto"></div>
             </div>
           </div>
         </Layout>
@@ -157,24 +157,24 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <Layout>
-        <div className="animate-fade-in">
+        <div className="container-responsive mobile-py-8 lg:py-12 animate-fade-in">
           {/* Profile Header */}
-          <div className="glass-effect rounded-2xl p-8 mb-8 border border-gray-700">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div className="glass-effect rounded-2xl p-6 lg:p-8 mb-6 lg:mb-8 border border-gray-700">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
               {/* Avatar */}
-              <div className="w-32 h-32 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-2xl">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl font-bold text-white shadow-2xl flex-shrink-0">
                 {profileUser?.displayName?.[0]?.toUpperCase() || profileUser?.username[0].toUpperCase()}
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-                  <h1 className="text-title">
+              <div className="flex-1 text-center lg:text-left">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 mb-4 lg:mb-6">
+                  <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-white">
                     {profileUser?.displayName || profileUser?.username}
                   </h1>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className="btn-secondary text-sm px-4 py-2"
+                    className="btn-secondary text-sm px-4 py-2 w-full sm:w-auto"
                   >
                     {isEditing ? '❌ Cancel' : '✏️ Edit Profile'}
                   </button>
@@ -184,46 +184,56 @@ export default function ProfilePage() {
                 <p className="text-gray-300 mb-4">{profileUser?.email}</p>
                 
                 {profileUser?.bio && (
-                  <p className="text-gray-300 leading-relaxed">{profileUser.bio}</p>
+                  <p className="text-gray-300 leading-relaxed text-sm lg:text-base">
+                    {profileUser.bio}
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-700">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mt-6 lg:mt-8 pt-6 lg:pt-8 border-t border-gray-700">
               <div className="text-center">
-                <div className="text-2xl font-bold gradient-text mb-1">24</div>
-                <div className="text-gray-400 text-sm">Movies Watched</div>
+                <div className="text-xl lg:text-2xl font-bold gradient-text mb-1">24</div>
+                <div className="text-gray-400 text-sm lg:text-base">Movies Watched</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold gradient-text mb-1">8</div>
-                <div className="text-gray-400 text-sm">TV Shows</div>
+                <div className="text-xl lg:text-2xl font-bold gradient-text mb-1">8</div>
+                <div className="text-gray-400 text-sm lg:text-base">TV Shows</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold gradient-text mb-1">12</div>
-                <div className="text-gray-400 text-sm">Books Read</div>
+                <div className="text-xl lg:text-2xl font-bold gradient-text mb-1">12</div>
+                <div className="text-gray-400 text-sm lg:text-base">Books Read</div>
               </div>
             </div>
           </div>
 
+          {/* Success Message */}
+          {success && (
+            <div className="mb-6 lg:mb-8 p-4 bg-green-900/20 border border-green-800 text-green-400 rounded-xl animate-fade-in">
+              <div className="flex items-center">
+                <span className="mr-2">✅</span>
+                {success}
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 lg:mb-8 p-4 bg-red-900/20 border border-red-800 text-red-400 rounded-xl animate-fade-in">
+              <div className="flex items-center">
+                <span className="mr-2">❌</span>
+                {error}
+              </div>
+            </div>
+          )}
+
           {/* Edit Form */}
           {isEditing && (
-            <div className="glass-effect rounded-2xl p-8 mb-8 border border-gray-700 animate-scale-in">
-              <h2 className="text-subtitle mb-6">Edit Profile</h2>
-              
-              {error && (
-                <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-6">
-                  <p className="text-red-400">{error}</p>
-                </div>
-              )}
+            <div className="glass-effect rounded-2xl p-6 lg:p-8 mb-6 lg:mb-8 border border-gray-700 animate-scale-in">
+              <h2 className="text-xl lg:text-2xl font-bold text-white mb-4 lg:mb-6">Edit Profile</h2>
 
-              {success && (
-                <div className="bg-green-900/20 border border-green-800 rounded-xl p-4 mb-6">
-                  <p className="text-green-400">{success}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Display Name
@@ -250,7 +260,7 @@ export default function ProfilePage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows={4}
-                    className={`input-field ${errors.bio ? 'border-red-500' : ''}`}
+                    className={`input-field resize-none ${errors.bio ? 'border-red-500' : ''}`}
                     placeholder="Tell us about yourself..."
                     maxLength={500}
                   />
@@ -262,18 +272,25 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary flex-1"
+                    className="btn-primary flex-1 btn-responsive"
                   >
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {saving ? (
+                      <span className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="btn-secondary flex-1"
+                    className="btn-secondary flex-1 btn-responsive"
                   >
                     Cancel
                   </button>
@@ -283,10 +300,12 @@ export default function ProfilePage() {
           )}
 
           {/* Recent Activity / Library Preview */}
-          <div className="space-y-8">
+          <div className="space-y-6 lg:space-y-8">
             <div>
-              <h2 className="text-subtitle mb-6">Your Library Preview</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <h2 className="text-xl lg:text-2xl font-bold text-white mb-4 lg:mb-6 mobile-text-center lg:text-left">
+                Your Library Preview
+              </h2>
+              <div className="grid-responsive">
                 {sampleMedia.map((media) => (
                   <MediaCard
                     key={media.id}
