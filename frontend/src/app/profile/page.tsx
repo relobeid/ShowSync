@@ -142,11 +142,11 @@ export default function ProfilePage() {
     return (
       <ProtectedRoute>
         <Layout>
-          <div className="animate-fade-in">
+          <div className="animate-fade-in container-responsive mobile-py-8">
             <div className="text-center py-12">
-              <div className="skeleton w-32 h-32 rounded-full mx-auto mb-4"></div>
-              <div className="skeleton w-48 h-6 mx-auto mb-2"></div>
-              <div className="skeleton w-64 h-4 mx-auto"></div>
+              <div className="skeleton w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full mx-auto mb-4"></div>
+              <div className="skeleton w-32 sm:w-48 h-4 sm:h-6 mx-auto mb-2"></div>
+              <div className="skeleton w-48 sm:w-64 h-3 sm:h-4 mx-auto"></div>
             </div>
           </div>
         </Layout>
@@ -157,73 +157,80 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <Layout>
-        <div className="animate-fade-in">
+        <div className="animate-fade-in container-responsive mobile-py-8">
+          {/* Success/Error Messages */}
+          {success && (
+            <div className="mb-6 sm:mb-8 p-4 bg-green-900/20 border border-green-800 text-green-400 rounded-xl flex items-center">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+              </svg>
+              {success}
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 sm:mb-8 p-4 bg-red-900/20 border border-red-800 text-red-400 rounded-xl flex items-center">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
           {/* Profile Header */}
-          <div className="glass-effect rounded-2xl p-8 mb-8 border border-gray-700">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div className="glass-effect rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-700">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
               {/* Avatar */}
-              <div className="w-32 h-32 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-2xl">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl font-bold text-white shadow-2xl">
                 {profileUser?.displayName?.[0]?.toUpperCase() || profileUser?.username[0].toUpperCase()}
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-                  <h1 className="text-title">
+              <div className="flex-1 text-center lg:text-left">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4 mb-4">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                     {profileUser?.displayName || profileUser?.username}
                   </h1>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className="btn-secondary text-sm px-4 py-2"
+                    className="btn-secondary text-sm px-4 py-2 w-full sm:w-auto"
                   >
                     {isEditing ? '❌ Cancel' : '✏️ Edit Profile'}
                   </button>
                 </div>
                 
-                <p className="text-gray-400 mb-2">@{profileUser?.username}</p>
-                <p className="text-gray-300 mb-4">{profileUser?.email}</p>
+                <p className="text-sm sm:text-base text-gray-400 mb-2">@{profileUser?.username}</p>
+                <p className="text-sm sm:text-base text-gray-300 mb-4">{profileUser?.email}</p>
                 
                 {profileUser?.bio && (
-                  <p className="text-gray-300 leading-relaxed">{profileUser.bio}</p>
+                  <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{profileUser.bio}</p>
                 )}
               </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-700">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-700">
               <div className="text-center">
-                <div className="text-2xl font-bold gradient-text mb-1">24</div>
-                <div className="text-gray-400 text-sm">Movies Watched</div>
+                <div className="text-xl sm:text-2xl font-bold gradient-text mb-1">24</div>
+                <div className="text-xs sm:text-sm text-gray-400">Movies Watched</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold gradient-text mb-1">8</div>
-                <div className="text-gray-400 text-sm">TV Shows</div>
+                <div className="text-xl sm:text-2xl font-bold gradient-text mb-1">8</div>
+                <div className="text-xs sm:text-sm text-gray-400">TV Shows</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold gradient-text mb-1">12</div>
-                <div className="text-gray-400 text-sm">Books Read</div>
+                <div className="text-xl sm:text-2xl font-bold gradient-text mb-1">12</div>
+                <div className="text-xs sm:text-sm text-gray-400">Books Read</div>
               </div>
             </div>
           </div>
 
           {/* Edit Form */}
           {isEditing && (
-            <div className="glass-effect rounded-2xl p-8 mb-8 border border-gray-700 animate-scale-in">
-              <h2 className="text-subtitle mb-6">Edit Profile</h2>
-              
-              {error && (
-                <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-6">
-                  <p className="text-red-400">{error}</p>
-                </div>
-              )}
+            <div className="glass-effect rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-700 animate-scale-in">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Edit Profile</h2>
 
-              {success && (
-                <div className="bg-green-900/20 border border-green-800 rounded-xl p-4 mb-6">
-                  <p className="text-green-400">{success}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Display Name
@@ -250,25 +257,35 @@ export default function ProfilePage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows={4}
-                    className={`input-field ${errors.bio ? 'border-red-500' : ''}`}
+                    className={`input-field resize-none ${errors.bio ? 'border-red-500' : ''}`}
                     placeholder="Tell us about yourself..."
                     maxLength={500}
                   />
                   <div className="flex justify-between mt-1">
                     {errors.bio && <p className="text-sm text-red-400">{errors.bio}</p>}
-                    <p className="text-sm text-gray-500 ml-auto">
+                    <p className="text-xs sm:text-sm text-gray-500 ml-auto">
                       {formData.bio.length}/500
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary flex-1"
+                    className={`btn-primary flex-1 ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {saving ? (
+                      <div className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </div>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </button>
                   <button
                     type="button"
@@ -283,10 +300,10 @@ export default function ProfilePage() {
           )}
 
           {/* Recent Activity / Library Preview */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div>
-              <h2 className="text-subtitle mb-6">Your Library Preview</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Your Library Preview</h2>
+              <div className="grid-responsive">
                 {sampleMedia.map((media) => (
                   <MediaCard
                     key={media.id}

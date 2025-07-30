@@ -104,6 +104,44 @@ html {
   filter: drop-shadow(0 2px 4px rgba(229, 9, 20, 0.3));
 }
 
+/* Mobile-First Responsive Utilities */
+@media (max-width: 768px) {
+  /* Hide horizontal overflow on mobile */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Ensure containers don't exceed viewport */
+  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+    max-width: 100vw;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Better mobile button spacing */
+  .btn-primary, .btn-secondary {
+    min-height: 48px; /* Touch-friendly */
+    font-size: 0.9rem;
+  }
+  
+  /* Mobile text sizes that maintain hierarchy */
+  .text-hero-mobile {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    line-height: 1.1;
+  }
+  
+  /* Responsive spacing */
+  .space-y-mobile > * + * {
+    margin-top: 1rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .space-y-mobile > * + * {
+    margin-top: 1.5rem;
+  }
+}
+
 /* Cinema Theater Elements */
 .theater-curtains {
   position: relative;
@@ -134,7 +172,15 @@ html {
   transition: all 0.5s ease-in-out;
 }
 
-/* Visible curtains on sides */
+/* Hide curtains on mobile and tablet */
+@media (max-width: 1024px) {
+  .theater-curtains::before,
+  .theater-curtains::after {
+    display: none !important;
+  }
+}
+
+/* Visible curtains on large screens only */
 .curtains-visible::before {
   left: 0;
   opacity: 1;
@@ -162,6 +208,40 @@ html {
   opacity: 0;
   border-radius: 20px 0 0 20px;
   border-right: none;
+}
+
+/* RESPONSIVE BREAKPOINTS */
+/* Mobile: 768px and below */
+/* Tablet: 769px to 1024px */
+/* Desktop: 1025px and above */
+
+/* Mobile Responsive Rules - Hide Curtains Completely */
+@media (max-width: 768px) {
+  .theater-curtains::before,
+  .theater-curtains::after {
+    display: none !important;
+  }
+  
+  /* Reduce floating symbols on mobile */
+  .theater-curtains .absolute {
+    opacity: 0.3 !important;
+  }
+}
+
+/* Tablet - Smaller Curtains */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .theater-curtains::before,
+  .theater-curtains::after {
+    width: 60px;
+  }
+  
+  .curtains-hidden::before {
+    left: -60px;
+  }
+  
+  .curtains-hidden::after {
+    right: -60px;
+  }
 }
 
 .movie-reel {
@@ -334,6 +414,185 @@ html {
 
 .input-field::placeholder {
   color: var(--text-muted);
+}
+
+/* RESPONSIVE UTILITIES */
+
+/* Container Responsive */
+.container-responsive {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding: 0 2rem;
+  }
+}
+
+/* Grid Responsive */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Mobile Sidebar */
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  transition: all 0.3s ease;
+}
+
+.mobile-sidebar-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100%;
+  background: var(--bg-secondary);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.mobile-sidebar.open .mobile-sidebar-content {
+  transform: translateX(0);
+}
+
+/* Responsive Button Sizes */
+.btn-responsive {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .btn-responsive {
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
+}
+
+/* Responsive Spacing */
+.space-y-responsive > * + * {
+  margin-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  .space-y-responsive > * + * {
+    margin-top: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .space-y-responsive > * + * {
+    margin-top: 2rem;
+  }
+}
+
+/* Mobile Navigation Utilities */
+.mobile-hidden {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-hidden {
+    display: block;
+  }
+}
+
+.mobile-only {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+}
+
+/* Responsive Text Center */
+.mobile-text-center {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .mobile-text-center {
+    text-align: left;
+  }
+}
+
+/* Responsive Padding */
+.mobile-px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-px-4 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-px-4 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.mobile-py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-py-8 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-py-8 {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
 }
 
 /* Netflix-style fade animations */
