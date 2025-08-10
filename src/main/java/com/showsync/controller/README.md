@@ -12,6 +12,7 @@ REST API controllers for ShowSync backend. All controllers follow RESTful conven
 | `ReviewController` | `/api/reviews` | Media reviews and ratings | Required |
 | `GroupController` | `/api/groups` | Group management | Required |
 | `GroupMediaController` | `/api/groups/{id}/media` | Group media activities | Required |
+| `RecommendationController` | `/api/recommendations` | AI recommendations (content, groups, trending) | Required |
 | `HealthController` | `/actuator/health` | System health checks | Public |
 
 ## Authentication Endpoints
@@ -40,6 +41,26 @@ REST API controllers for ShowSync backend. All controllers follow RESTful conven
 - `GET /favorites` - Get user's favorite media
 
 ## Group Management Endpoints
+## Recommendations Endpoints
+
+### RecommendationController (`/api/recommendations`)
+- `GET /personal?page=&size=` - Personal content recommendations
+- `GET /realtime?mediaId=&limit=` - Real-time recs (content-based when `mediaId` provided)
+- `GET /trending?limit=` - Trending content
+- `GET /groups?page=&size=` - Group suggestions
+- `GET /groups/{groupId}/content?page=&size=` - Group-specific content
+- `POST /view/{type}/{id}` - Mark viewed (idempotent)
+- `POST /dismiss/{type}/{id}?reason=` - Dismiss recommendation
+- `POST /feedback/{type}/{id}?rating=&comment=` - Submit feedback (1–5)
+- `POST /generate` - Generate for all users (admin)
+- `POST /generate/me` - Generate for current user
+- `GET /analytics?days=` - System analytics (MVP)
+- `GET /insights/me` - User insights (confidence, personality)
+- `GET /summary/me` - Compact summary for dashboard
+- `GET /similar/{mediaId}?limit=` - Similar content
+- `GET /by-type?type=&limit=` - Filtered recommendations
+
+All endpoints require JWT auth; some admin-only operations may be restricted.
 
 ### GroupController (`/api/groups`)
 - `GET /` - List user's groups

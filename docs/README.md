@@ -14,6 +14,7 @@ This directory contains all technical documentation for the ShowSync project.
 
 ### Features
 - [`features/search-integration.md`](features/search-integration.md) - Search functionality implementation guide
+- [`features/recommendations.md`](features/recommendations.md) - AI recommendations endpoints, config, and flows
 
 ### Setup & Configuration
 - [`setup/environment.md`](setup/environment.md) - Environment configuration and deployment
@@ -27,6 +28,7 @@ This directory contains all technical documentation for the ShowSync project.
 | Development | [development/tasks.md](development/tasks.md) | Task tracking and completion status |
 | Workflows | [development/workflow.md](development/workflow.md) | Development processes and git workflows |
 | Search Feature | [features/search-integration.md](features/search-integration.md) | Search API implementation details |
+| Recommendations | [features/recommendations.md](features/recommendations.md) | AI recommendation endpoints and flows |
 | Environment Setup | [setup/environment.md](setup/environment.md) | Configuration and deployment guides |
 
 ## Contributing to Documentation

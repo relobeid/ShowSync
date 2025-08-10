@@ -9,6 +9,8 @@ Spring Boot configuration classes for ShowSync backend. Handles security, extern
 | `SecurityConfig` | Authentication and authorization | `SecurityFilterChain`, `PasswordEncoder` |
 | `WebClientConfig` | HTTP clients for external APIs | `tmdbWebClient`, `openLibraryWebClient` |
 | `CacheConfig` | Redis caching configuration | `CacheManager`, `RedisTemplate` |
+| `RecommendationConfig` | AI recommendations configuration | `@ConfigurationProperties` for tuning |
+| `SchedulingConfig` | Enables Spring scheduling | `@EnableScheduling` |
 | `ExternalApiProperties` | External API settings | Configuration properties binding |
 | `OpenApiConfig` | Swagger/OpenAPI documentation | `OpenAPI`, `GroupedOpenApi` |
 
@@ -72,6 +74,54 @@ external-apis:
 - `external-api-responses` - External API response caching
 - `user-sessions` - User session data
 - `media-details` - Media information caching
+- `recommendations` - Per-user recommendation lists
+- `trendingRecommendations` - Trending feed cache (6h)
+- `recommendationAnalytics` - Aggregated analytics (6h)
+- `userRecommendationInsights` - Per-user insights (1h)
+- `userCompatibility` - Compatibility scores (12h)
+- `userGenrePreferences`, `userPlatformPreferences`, `userEraPreferences` - Derived preferences (6h)
+
+## AI Recommendations Configuration
+
+### RecommendationConfig
+Type-safe configuration for the AI recommendation system (prefix: `showsync.recommendations`). Key knobs:
+
+- General: `enabled`, `max-recommendations-per-user`, `default-batch-size`
+- Weights (must sum to 1.0): `genre-weight`, `rating-weight`, `platform-weight`, `era-weight`
+- Thresholds: `min-confidence-threshold`, `min-interactions-for-recommendations`
+- Expiration: `content-recommendation-expiry`, `group-recommendation-expiry`
+- Algorithm: `collaborative-filtering-user-count`, `min-similarity-score`, `time-decay-factor`
+- Personalization: `personalization-balance`, `diversity-factor`, `exploration-factor`
+- Feedback: `positive-feedback-weight`, `negative-feedback-weight`, `feedback-learning-rate`
+- Performance: `enable-caching`, `cache-expiry`, `async-generation`, `async-thread-pool-size`
+- Feature flags: `features.*` (personal, group, trending, collaborative, content-based, seasonal)
+
+Example:
+```yaml
+showsync:
+  recommendations:
+    enabled: true
+    max-recommendations-per-user: 20
+    genre-weight: 0.4
+    rating-weight: 0.3
+    platform-weight: 0.2
+    era-weight: 0.1
+    enable-schedulers: true
+```
+
+## Scheduling
+
+### SchedulingConfig & properties
+- Enabled via `@EnableScheduling`
+- Controlled by `RecommendationConfig`:
+  - `enable-schedulers` (default: true)
+  - `daily-generation-cron` (default: `0 15 3 * * *`)
+  - `active-users-refresh-cron` (default: `0 10 * * * *`)
+  - `active-users-hours-back` (default: 24)
+
+Scheduled tasks (in `RecommendationScheduler`):
+- Daily generation for all users
+- Hourly refresh for recently active users
 
 ## Development vs Production
 
