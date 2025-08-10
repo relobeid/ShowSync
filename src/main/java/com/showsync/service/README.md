@@ -14,6 +14,8 @@ Business logic layer for ShowSync backend. All services follow interface-based d
 | `GroupMediaService` | `GroupMediaServiceImpl` | Group media activities and voting |
 | `HealthService` | `HealthServiceImpl` | System health monitoring |
 | `UserDetailsServiceImpl` | - | Spring Security user details implementation |
+| `RecommendationService` | `RecommendationServiceImpl` | AI recommendation engine |
+| `UserPreferenceService` | `UserPreferenceServiceImpl` | User taste profile management |
 
 ## Core Services
 
@@ -83,6 +85,24 @@ public class ServiceNameImpl implements ServiceName {
 - TTL configuration per cache type
 
 ## External Service Integration
+## AI Recommendations Services
+
+### RecommendationService
+- Personal, trending, real-time recommendations
+- Group suggestions and group content generation
+- Analytics, insights, and summary endpoints
+- Batch generation (all users) and active-user refresh
+
+### UserPreferenceService
+- Build/update per-user preference profiles
+- Compute compatibility, diversity, confidence
+- Batch maintenance (active users, low-confidence refresh, cleanup)
+
+### Scheduling
+- Daily generation and hourly refresh controlled by `RecommendationConfig`
+
+### Caching
+- Redis caches for trending, analytics, insights, and preference maps
 
 ### Resilience Patterns
 - Circuit breaker for external API failures

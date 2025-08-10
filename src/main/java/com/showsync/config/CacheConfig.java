@@ -92,6 +92,22 @@ public class CacheConfig {
         // Recommendations - medium-term (balance between freshness and performance)
         cacheConfigurations.put("recommendations", defaultConfig
                 .entryTtl(Duration.ofHours(6)));
+
+        // AI recommendation-specific caches
+        cacheConfigurations.put("trendingRecommendations", defaultConfig
+                .entryTtl(Duration.ofHours(6)));
+        cacheConfigurations.put("recommendationAnalytics", defaultConfig
+                .entryTtl(Duration.ofHours(6)));
+        cacheConfigurations.put("userRecommendationInsights", defaultConfig
+                .entryTtl(Duration.ofHours(1)));
+        cacheConfigurations.put("userCompatibility", defaultConfig
+                .entryTtl(Duration.ofHours(12)));
+        cacheConfigurations.put("userGenrePreferences", defaultConfig
+                .entryTtl(Duration.ofHours(6)));
+        cacheConfigurations.put("userPlatformPreferences", defaultConfig
+                .entryTtl(Duration.ofHours(6)));
+        cacheConfigurations.put("userEraPreferences", defaultConfig
+                .entryTtl(Duration.ofHours(6)));
         
         log.info("Cache TTL configured - External API: {}s, Users: 30min, Media: 12h, Groups: 15min, Recommendations: 6h",
                 externalApiProperties.getTmdb().getCacheTtl());

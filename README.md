@@ -72,6 +72,7 @@ npm run dev
 | **Architecture** | [docs/architecture.md](docs/architecture.md) | System design and technical decisions |
 | **Development** | [docs/development/](docs/development/) | Workflows, tasks, and processes |
 | **Features** | [docs/features/](docs/features/) | Feature implementation guides |
+| **Recommendations** | [docs/features/recommendations.md](docs/features/recommendations.md) | AI endpoints, config, caching, scheduling |
 
 ## Development
 
@@ -117,7 +118,7 @@ See [docs/development/workflow.md](docs/development/workflow.md) for detailed gu
 | User Library | ✅ Complete | Ratings and reviews |
 | Groups | ✅ Complete | Basic group management |
 | Real-time Chat | 🚧 In Progress | WebSocket implementation |
-| AI Recommendations | 📋 Planned | Taste-based matching |
+| AI Recommendations | ✅ Complete (MVP) | Endpoints, schedulers, caching; UI MVP at /recommendations |
 
 ## License
 

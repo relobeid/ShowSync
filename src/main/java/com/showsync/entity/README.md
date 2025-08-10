@@ -16,6 +16,10 @@ JPA entities representing the ShowSync database schema. All entities use Lombok 
 | `GroupMediaVote` | User votes on group media | Many-to-One with User, GroupMediaList |
 | `GroupActivity` | Activity feed for groups | Many-to-One with Group, User |
 | `ReviewVote` | Votes on reviews (helpful/not) | Many-to-One with User, Review |
+| `UserPreferenceProfile` | Calculated taste profile per user | One-to-One with User |
+| `ContentRecommendation` | Content-level recommendations | Many-to-One with User, Media |
+| `GroupRecommendation` | Group suggestions for users | Many-to-One with User, Group |
+| `RecommendationFeedback` | Explicit feedback on recs | Many-to-One with User |
 
 ## Entity Details
 
@@ -42,8 +46,48 @@ Unified entity for all media types (movies, TV shows, books).
 - `mediaType` - Type enum (MOVIE, TV_SHOW, BOOK)
 - `title` - Media title
 - `description` - Synopsis/description
-- `releaseYear` - Release year
-- `genres` - JSON array of genres
+- `releaseDate` - Release date (LocalDateTime)
+- `type` - Enum (MOVIE, TV_SHOW, BOOK)
+- `averageRating`, `ratingCount`
+### UserPreferenceProfile
+Stores per-user preferences (genres/platforms/eras), viewing personality, and confidence.
+
+**Key Fields:**
+- `user` - One-to-one User
+- `genrePreferences` - JSON string map
+- `platformPreferences` - JSON string map
+- `eraPreferences` - JSON string map
+- `viewingPersonality` - Enum
+- `confidenceScore` - BigDecimal
+
+### ContentRecommendation
+Recommendation records for media.
+
+**Key Fields:**
+- `user`, `media`
+- `type` - Recommendation type enum (PERSONAL, TRENDING, etc.)
+- `relevanceScore` - BigDecimal
+- `reasonCode` - Enum reason
+- `explanation` - Human-readable why
+- `viewed`, `dismissed`, `addedToLibraryAt` timestamps
+
+### GroupRecommendation
+Precalculated group suggestions.
+
+**Key Fields:**
+- `user`, `group`
+- `compatibilityScore` - BigDecimal
+- `reasonCode`, `explanation`
+- `viewed`, `dismissed`, `joinedAt` timestamps
+
+### RecommendationFeedback
+Explicit user feedback on recommendations.
+
+**Key Fields:**
+- `user`
+- `feedbackType` and reason
+- `targetType` (CONTENT/GROUP) + `targetId`
+- `rating` (1–5), `comment`
 - `posterUrl` - Poster image URL
 - `averageRating` - Calculated average rating
 
