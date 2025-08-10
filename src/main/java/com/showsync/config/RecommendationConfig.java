@@ -168,6 +168,30 @@ public class RecommendationConfig {
      */
     private int asyncThreadPoolSize = 5;
     
+    // === SCHEDULING SETTINGS ===
+    
+    /**
+     * Enable scheduled batch generation tasks
+     */
+    private boolean enableSchedulers = true;
+    
+    /**
+     * Cron expression for daily all-users generation
+     * Default: 3:15 AM daily
+     */
+    private String dailyGenerationCron = "0 15 3 * * *";
+    
+    /**
+     * Cron expression for periodic active-users refresh
+     * Default: every hour at minute 10
+     */
+    private String activeUsersRefreshCron = "0 10 * * * *";
+    
+    /**
+     * Hours window to consider a user as recently active
+     */
+    private int activeUsersHoursBack = 24;
+    
     // === QUALITY CONTROL ===
     
     /**
