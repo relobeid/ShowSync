@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Layout from "@/components/layout/Layout";
 
 export default function Home() {
@@ -227,14 +228,14 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-12 sm:mb-16 px-2">
-            <button className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 ai-glow transform hover:scale-105 transition-all duration-200 w-full sm:w-auto max-w-sm">
+            <Link href="/auth/register" className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 ai-glow transform hover:scale-105 transition-all duration-200 w-full sm:w-auto max-w-sm">
               <span className="movie-reel w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 inline-block scale-50"></span>
               Build My Taste Profile
-            </button>
-            <button className="btn-secondary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 transform hover:scale-105 transition-all duration-200 w-full sm:w-auto max-w-sm">
+            </Link>
+            <Link href="/how-it-works" className="btn-secondary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 transform hover:scale-105 transition-all duration-200 w-full sm:w-auto max-w-sm">
               <span className="popcorn-icon mr-2 sm:mr-3"></span>
               See How It Works
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -541,18 +542,18 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <button className="btn-primary text-base sm:text-lg px-8 py-4 transform hover:scale-105 transition-all duration-200 shadow-lg shadow-red-600/25">
+              <Link href="/auth/register" className="btn-primary text-base sm:text-lg px-8 py-4 transform hover:scale-105 transition-all duration-200 shadow-lg shadow-red-600/25">
                 <svg className="w-5 h-5 mr-2 inline-block" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
                 Start Rating & Connecting
-              </button>
-              <button className="btn-secondary text-base sm:text-lg px-8 py-4 transform hover:scale-105 transition-all duration-200 border border-gray-600 hover:border-gray-500">
+              </Link>
+              <Link href="/how-it-works" className="btn-secondary text-base sm:text-lg px-8 py-4 transform hover:scale-105 transition-all duration-200 border border-gray-600 hover:border-gray-500">
                 <svg className="w-5 h-5 mr-2 inline-block" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 9.5V12L21 14.5V12.5L19 11.8L21 11.1ZM3 9V7L9 9.5V12L3 14.5V12.5L5 11.8L3 11.1Z"/>
                 </svg>
-                Browse Active Discussions
-              </button>
+                See How It Works
+              </Link>
             </div>
             
             <div className="flex flex-wrap justify-center items-center gap-3 text-sm text-gray-400">
