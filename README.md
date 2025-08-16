@@ -8,15 +8,21 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-ShowSync combines intelligent media recommendations with Discord-style communities, enabling users to discover content through taste-based matching and real-time social interaction.
+## The Problem
+
+Many media enthusiasts experience "media loneliness" - the frustration of consuming great content but having no one to discuss it with. Traditional social platforms lack the depth for meaningful media conversations, and finding like-minded individuals with similar tastes is challenging and time-consuming.
+
+## Our Solution
+
+ShowSync uses algorithmic matching to connect users with compatible media preferences, creating focused discussion groups similar to real-world book clubs. Our recommendation engine analyzes viewing patterns, ratings, and preferences to form communities where members genuinely share common interests, fostering engaging conversations about movies, TV shows, and books.
 
 ## Features
 
-- **Smart Recommendations**: AI-powered content discovery based on viewing patterns
-- **Social Groups**: Real-time chat communities organized around shared interests  
-- **Media Library**: Personal tracking and rating system for movies, TV shows, and books
-- **External API Integration**: Rich metadata from TMDb and OpenLibrary
-- **Taste Matching**: Algorithm-based user compatibility for group formation
+- **Algorithmic Matching**: Connect with users who share your media preferences and viewing patterns
+- **Discussion Groups**: Join focused chat communities with like-minded media enthusiasts
+- **Personal Library**: Track and rate movies, TV shows, and books to improve matching accuracy
+- **Content Discovery**: AI-powered recommendations based on group preferences and individual taste
+- **Real-time Chat**: Engage in meaningful discussions about current and upcoming media
 
 ## Quick Start
 
@@ -65,14 +71,12 @@ npm run dev
 
 ## Documentation
 
-| Topic | Location | Description |
-|-------|----------|-------------|
-| **Getting Started** | [docs/setup/](docs/setup/) | Detailed setup and configuration |
-| **API Reference** | [docs/controller/](docs/controller/) | Complete REST API documentation |
-| **Architecture** | [docs/architecture.md](docs/architecture.md) | System design and technical decisions |
-| **Development** | [docs/development/](docs/development/) | Workflows, tasks, and processes |
-| **Features** | [docs/features/](docs/features/) | Feature implementation guides |
-| **Recommendations** | [docs/features/recommendations.md](docs/features/recommendations.md) | AI endpoints, config, caching, scheduling |
+| Topic | Description |
+|-------|-------------|
+| [Setup Guide](docs/setup/) | Installation and configuration instructions |
+| [Architecture](docs/architecture.md) | System design and technical overview |
+| [Features](docs/features/) | Implementation details and configuration |
+| [API Reference](docs/controller/) | REST API documentation |
 
 ## Development
 
@@ -99,31 +103,3 @@ cd frontend && npm test
 # Integration tests
 ./mvnw test -Dtest="*IntegrationTest"
 ```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes with tests
-4. Submit a pull request
-
-See [docs/development/workflow.md](docs/development/workflow.md) for detailed guidelines.
-
-## Status
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Authentication | ✅ Complete | JWT-based security |
-| Media Search | ✅ Complete | TMDb/OpenLibrary integration |
-| User Library | ✅ Complete | Ratings and reviews |
-| Groups | ✅ Complete | Basic group management |
-| Real-time Chat | 🚧 In Progress | WebSocket implementation |
-| AI Recommendations | ✅ Complete (MVP) | Endpoints, schedulers, caching; UI MVP at /recommendations |
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-**Questions?** Check the [documentation](docs/) or open an [issue](https://github.com/yourusername/ShowSync/issues).
